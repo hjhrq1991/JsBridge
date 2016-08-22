@@ -10,9 +10,9 @@
 ```xml
 
 <com.github.lzyzsd.jsbridge.BridgeWebView
-android:id="@+id/webView"
-android:layout_width="match_parent"
-android:layout_height="match_parent" />
+ android:id="@+id/webView"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent" />
 
 ```
 
@@ -33,11 +33,11 @@ webView.setCustom("TestJavascriptBridge");
 ```java
 
 webView.registerHandler("initSignNetPay", new BridgeHandler() {
-@Override
-public void handler(String data, CallBackFunction function) {
-Log.i(TAG, "回传结果：" + data);
-Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
-}
+   @Override
+   public void handler(String data, CallBackFunction function) {
+      Log.i(TAG, "回传结果：" + data);
+      Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
+   }
 });
 
 
@@ -47,12 +47,12 @@ Java里调用Js里的handler方法
 
 ```java
 
-webView.callHandler("click2", "success", new CallBackFunction() {
-@Override
-public void onCallBack(String data) {
-Log.i(TAG, "回传结果：" + data);
-Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
-}
+webView.callHandler("click1", "success", new CallBackFunction() {
+   @Override
+   public void onCallBack(String data) {
+      Log.i(TAG, "回传结果：" + data);
+      Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
+   }
 });
 
 ```
@@ -68,10 +68,9 @@ webView.setDefaultHandler(new DefaultHandler());
 ```javascript
 
 window.WebViewJavascriptBridge.send(
-data
-, function(responseData) {
-document.getElementById("show").innerHTML = "repsonseData from java, data = " + responseData
-}
+   data, function(responseData) {
+      document.getElementById("show").innerHTML = "repsonseData from java, data = " + responseData
+   }
 );
 
 ```
@@ -82,33 +81,33 @@ document.getElementById("show").innerHTML = "repsonseData from java, data = " + 
 
 ```javascript
 var default_data = {
-error: "1"
+   error: "1"
 };
 
 var connectMerchantJSBridge = function (callback) {
-try {
-if (window.WebViewJavascriptBridge) {
-callback(WebViewJavascriptBridge);
-} else {
-document.addEventListener("WebViewJavascriptBridgeReady", function () {
-callback(WebViewJavascriptBridge);
-}, false);
-}
-} catch (ex) { }
+   try {
+      if (window.WebViewJavascriptBridge) {
+      callback(WebViewJavascriptBridge);
+   } else {
+      document.addEventListener("WebViewJavascriptBridgeReady", function () {
+         callback(WebViewJavascriptBridge);
+         }, false);
+      }
+   } catch (ex) { }
 };
 
 var cmbMerchantBridge = {
-initSignNet: function (payData,name) {
-if (!payData) {
-payData = default_data;
-}
-connectMerchantJSBridge(function (bridge) {
-if (typeof bridge === "undefined") {
-return;
-}
-bridge.callHandler(name, JSON.stringify(payData));
-});
-},
+   initSignNet: function (payData,name) {
+      if (!payData) {
+         payData = default_data;
+      }
+      connectMerchantJSBridge(function (bridge) {
+         if (typeof bridge === "undefined") {
+            return;
+         }
+      bridge.callHandler(name, JSON.stringify(payData));
+      });
+   },
 };
 
 ````
@@ -119,11 +118,11 @@ bridge.callHandler(name, JSON.stringify(payData));
 
 function click1()
 {
-var objData = new datas();
-var payData = objData.click1;
-try {
-cmbMerchantBridge.initSignNet(payData, "initSignNetPay");
-} catch (ex) { }
+   var objData = new datas();
+   var payData = objData.click1;
+   try {
+      cmbMerchantBridge.initSignNet(payData, "initSignNetPay");
+   } catch (ex) { }
 }
 
 ```
@@ -139,18 +138,9 @@ bridge.init(function(message, responseCallback) {
 });
 
 bridge.registerHandler("click1", function(data, responseCallback) {
-responseCallback("receive click1");
-/*弹窗*/
-dialog();
-});
-
-bridge.registerHandler("click2", function(data, responseCallback) {
-responseCallback("receive click2");
-});
-
-bridge.registerHandler("click3", function(data, responseCallback) {
-responseCallback("receive click3");
-});
+   responseCallback("receive click1");
+   //可以在下面执行操作
+   });
 })
 
 window.cmbMerchantBridge = cmbMerchantBridge;
