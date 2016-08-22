@@ -1,12 +1,14 @@
 # JsBridge
 基于https://github.com/lzyzsd/JsBridge 优化改进而来的Android JsBridge
-```java
 
+### 优化
+1.支持自定义桥名；
+2.修复web页未渲染即进行跳转导致Js桥初始化失败的问题；
 
-```
-## 使用
+### 使用
 
 在你的布局上添加BridgeWebView
+
 ```xml
 
 <com.github.lzyzsd.jsbridge.BridgeWebView
