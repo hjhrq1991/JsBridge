@@ -11,11 +11,11 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.github.lzyzsd.jsbridge.BridgeHandler;
-import com.github.lzyzsd.jsbridge.BridgeWebView;
-import com.github.lzyzsd.jsbridge.CallBackFunction;
-import com.github.lzyzsd.jsbridge.DefaultHandler;
-import com.github.lzyzsd.jsbridge.OnShouldOverrideUrlLoading;
+import com.hjhrq1991.library.BridgeHandler;
+import com.hjhrq1991.library.BridgeWebView;
+import com.hjhrq1991.library.CallBackFunction;
+import com.hjhrq1991.library.DefaultHandler;
+import com.hjhrq1991.library.OnShouldOverrideUrlLoading;
 
 /**
  * @author hjhrq1991 created at 4/28/16 14:33.

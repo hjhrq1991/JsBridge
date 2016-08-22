@@ -3,6 +3,7 @@ apply plugin: 'com.android.library'
 version = "1.0.5"
 
 android {
+
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
 
@@ -21,4 +22,17 @@ android {
 }
 
 dependencies {
+}
+
+apply plugin: 'com.novoda.bintray-release'
+publish {
+    def Properties localProps = new Properties()
+    localProps.load(new FileInputStream(file('../gradle.properties')))
+
+    userOrg = localProps.USERORG
+    groupId = localProps.GROUPID
+    artifactId = localProps.ARTIFACTID
+    publishVersion = localProps.PUBLISHVERSION
+    desc = localProps.DESC
+    website = localProps.WEBSITE
 }

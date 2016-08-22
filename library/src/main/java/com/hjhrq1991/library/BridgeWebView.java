@@ -1,4 +1,4 @@
-package com.github.lzyzsd.jsbridge;
+package com.hjhrq1991.library;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -202,8 +202,8 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     /**
      * register handler,so that javascript can call it
      *
-     * @param handlerName
-     * @param handler
+     * @param handlerName handlerName
+     * @param handler Handler
      */
     public void registerHandler(String handlerName, BridgeHandler handler) {
         if (handler != null) {
@@ -214,9 +214,9 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     /**
      * call javascript registered handler
      *
-     * @param handlerName
-     * @param data
-     * @param callBack
+     * @param handlerName handlerName
+     * @param data data
+     * @param callBack callBack
      */
     public void callHandler(String handlerName, String data, CallBackFunction callBack) {
         doSend(handlerName, data, callBack);
@@ -229,7 +229,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     /**
      * @param customJs 自定义桥名，可为空，为空时使用默认桥名
-     * @Description: 自定义桥名回调，如用自定义桥名，请copy一份WebViewJavascriptBridge.js替换文件名
+     * 自定义桥名回调，如用自定义桥名，请copy一份WebViewJavascriptBridge.js替换文件名
      * 及脚本内所有包含"WebViewJavascriptBridge"的内容为你的自定义桥名
      * @author hjhrq1991 created at 6/20/16 17:32.
      */

@@ -1,4 +1,4 @@
-package com.github.lzyzsd.jsbridge;
+package com.hjhrq1991.library;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -57,8 +57,8 @@ public class BridgeUtil {
     /**
      * js 文件将注入为第一个script引用
      *
-     * @param view
-     * @param url
+     * @param view webview
+     * @param url url
      */
     public static void webViewLoadJs(WebView view, String url) {
         String js = "var newscript = document.createElement(\"script\");";

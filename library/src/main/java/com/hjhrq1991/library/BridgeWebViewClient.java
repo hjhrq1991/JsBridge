@@ -1,4 +1,4 @@
-package com.github.lzyzsd.jsbridge;
+package com.hjhrq1991.library;
 
 import android.graphics.Bitmap;
 import android.webkit.WebView;
@@ -9,7 +9,6 @@ import java.net.URLDecoder;
 
 /**
  * @author hjhrq1991 created at 8/22/16 14 41.
- * @Description:
  */
 public class BridgeWebViewClient extends WebViewClient {
     private BridgeWebView webView;

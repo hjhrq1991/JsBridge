@@ -1,8 +1,8 @@
-package com.github.lzyzsd.jsbridge;
+package com.hjhrq1991.library;
 
 /**
  * @author hjhrq1991 created at 8/22/16 14 41.
- * @Description:
+ * 配置文件
  */
 public class BridgeConfig {
 
