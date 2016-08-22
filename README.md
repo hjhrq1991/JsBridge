@@ -2,10 +2,30 @@
 基于https://github.com/lzyzsd/JsBridge 优化改进而来的Android JsBridge
 
 ### 优化
-1.支持自定义桥名；
-2.修复web页未渲染即进行跳转导致Js桥初始化失败的问题；
+1.支持自定义桥名；<br/>2.修复web页未渲染即进行跳转导致Js桥初始化失败的问题；
 
 ### 使用
+
+添加maven依赖
+
+```maven
+
+<dependency>
+  <groupId>com.hjhrq1991.library</groupId>
+  <artifactId>jsbridge</artifactId>
+  <version>1.0.5</version>
+  <type>pom</type>
+</dependency>
+
+```
+
+添加gradle依赖
+
+```gradle
+
+compile 'com.hjhrq1991.library:jsbridge:1.0.5'
+
+```
 
 在你的布局上添加BridgeWebView
 
@@ -41,7 +61,6 @@ webView.registerHandler("initSignNetPay", new BridgeHandler() {
       Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
    }
 });
-
 
 ```
 
@@ -118,8 +137,7 @@ var cmbMerchantBridge = {
 
 ```javascript
 
-function click1()
-{
+function click1(){
    var objData = new datas();
    var payData = objData.click1;
    try {
@@ -135,7 +153,7 @@ JavaScript里注册一个handler方法供Android调用
 
 /*app native调用本页面方法*/
 connectMerchantJSBridge(function(bridge) {
-bridge.init(function(message, responseCallback) {
+   bridge.init(function(message, responseCallback) {
 
 });
 
