@@ -26,7 +26,7 @@ compile 'com.hjhrq1991.library:jsbridge:1.0.5'
 在你的布局上添加BridgeWebView
 
 ```xml
-<com.github.lzyzsd.jsbridge.BridgeWebView
+<com.hjhrq1991.library.BridgeWebView
  android:id="@+id/webView"
  android:layout_width="match_parent"
  android:layout_height="match_parent" />
