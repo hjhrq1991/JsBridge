@@ -11,6 +11,40 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    signingConfigs {
+        def Properties localProps = new Properties()
+        localProps.load(new FileInputStream(file('../local.properties')))
+        def Properties keyProps = new Properties()
+
+        // 如果读取不到'keystore.props.file'属性，就使用debug keystore签名
+        if (localProps['keystore.props.file']) {
+            keyProps.load(new FileInputStream(file(localProps['keystore.props.file'])))
+        } else {
+            keyProps["store"] = '../buildsystem/debug.keystore'
+            keyProps["alias"] = 'androiddebugkey'
+            keyProps["storePass"] = 'android'
+            keyProps["pass"] = 'android'
+        }
+
+        debug {
+            storeFile file(keyProps["store"])
+            keyAlias keyProps["alias"]
+            storePassword keyProps["storePass"]
+            keyPassword keyProps["pass"]
+        }
+
+//        release {
+//            // release版本使用assert确保存在该属性否则报错，避免错误打包
+//            assert localProps['keystore.props.file'];
+//            storeFile file(keyProps["store"])
+//            keyAlias keyProps["alias"]
+//            storePassword keyProps["storePass"]
+//            keyPassword keyProps["pass"]
+//        }
+
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -21,7 +55,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-//    compile project(':library')
-    compile 'com.hjhrq1991.library:jsbridge:1.0.5'
+    compile project(':library')
+//    compile 'com.hjhrq1991.library:jsbridge:1.0.5'
     compile 'com.android.support:appcompat-v7:21.0.3'
 }
