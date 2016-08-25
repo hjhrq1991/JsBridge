@@ -56,5 +56,6 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:21.0.3'
-    compile project(':library-tbsx5')
+//    compile project(':library-tbsx5')
+    compile 'com.hjhrq1991.library:x5jsbridge:1.0.0'
 }

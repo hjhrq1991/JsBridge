@@ -19,6 +19,10 @@ import com.tencent.smtt.sdk.WebChromeClient;
 import com.tencent.smtt.sdk.WebSettings;
 import com.tencent.smtt.sdk.WebView;
 
+/**
+ * @author hjhrq1991 created at 4/28/16 14:33.
+ * @Description: jsBridge for tbs_x5 core.
+ */
 public class MainActivity extends Activity implements View.OnClickListener, OnShouldOverrideUrlLoading {
 
     private final String TAG = "MainActivity";
