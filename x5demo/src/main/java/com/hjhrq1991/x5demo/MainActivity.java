@@ -1,34 +1,31 @@
-package com.hjhrq1991.jsbridge.example;
+package com.hjhrq1991.x5demo;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.hjhrq1991.library.BridgeHandler;
-import com.hjhrq1991.library.BridgeWebView;
 import com.hjhrq1991.library.CallBackFunction;
 import com.hjhrq1991.library.DefaultHandler;
 import com.hjhrq1991.library.OnShouldOverrideUrlLoading;
+import com.hjhrq1991.library.TbsBridgeWebView;
+import com.tencent.smtt.sdk.WebChromeClient;
+import com.tencent.smtt.sdk.WebSettings;
+import com.tencent.smtt.sdk.WebView;
 
-/**
- * @author hjhrq1991 created at 4/28/16 14:33.
- * @Description: js桥demo实例
- */
-public class MainActivity extends Activity implements OnClickListener, OnShouldOverrideUrlLoading {
+public class MainActivity extends Activity implements View.OnClickListener, OnShouldOverrideUrlLoading {
 
     private final String TAG = "MainActivity";
 
     private String url;
 
-    BridgeWebView webView;
+    TbsBridgeWebView webView;
 
     Button backBtn;
     Button btn1;
@@ -40,15 +37,16 @@ public class MainActivity extends Activity implements OnClickListener, OnShouldO
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getWindow().setFormat(PixelFormat.TRANSLUCENT);//（这个对宿主没什么影响，建议声明）
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
         //=======================使用时请替换成自己url==========================
 //        url = "file:///android_asset/demo2.html";
         url = "file:///android_asset/testJavascriptBridge.html";
-
         initView();
     }
 
     private void initView() {
-        webView = (BridgeWebView) findViewById(R.id.webView);
+        webView = (TbsBridgeWebView) findViewById(R.id.webView);
 
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setSaveFormData(false);

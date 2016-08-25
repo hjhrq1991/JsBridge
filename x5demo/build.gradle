@@ -2,10 +2,10 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    buildToolsVersion "21.0.2"
 
     defaultConfig {
-        applicationId "com.hjhrq1991.jsbridge.example"
+        applicationId "com.hjhrq1991.x5demo"
         minSdkVersion 14
         targetSdkVersion 21
         versionCode 1
@@ -55,7 +55,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-//    compile project(':library')
-    compile 'com.hjhrq1991.library:jsbridge:1.0.5'
     compile 'com.android.support:appcompat-v7:21.0.3'
+    compile project(':library-tbsx5')
 }

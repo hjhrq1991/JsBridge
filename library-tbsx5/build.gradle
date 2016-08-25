@@ -1,0 +1,39 @@
+apply plugin: 'com.android.library'
+
+version = "1.0.0"
+
+android {
+
+    compileSdkVersion 21
+    buildToolsVersion "21.1.2"
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 21
+        versionCode 1
+        versionName version
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile files('libs/tbs_sdk_thirdapp_v2.2.0.1055_36542_sharewithoutdownload_withoutGame_obfs_20160816_120907.jar')
+}
+
+apply plugin: 'com.novoda.bintray-release'
+publish {
+    def Properties localProps = new Properties()
+    localProps.load(new FileInputStream(file('../gradle.properties')))
+
+    userOrg = localProps.USERORG
+    groupId = localProps.GROUPID
+    artifactId = localProps.X5_ARTIFACTID
+    publishVersion = localProps.X5_PUBLISHVERSION
+    desc = localProps.DESC
+    website = localProps.WEBSITE
+}
