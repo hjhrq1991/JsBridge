@@ -10,11 +10,11 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.hjhrq1991.library.BridgeHandler;
-import com.hjhrq1991.library.CallBackFunction;
-import com.hjhrq1991.library.DefaultHandler;
-import com.hjhrq1991.library.OnShouldOverrideUrlLoading;
-import com.hjhrq1991.library.TbsBridgeWebView;
+import com.hjhrq1991.library.tbs.BridgeHandler;
+import com.hjhrq1991.library.tbs.CallBackFunction;
+import com.hjhrq1991.library.tbs.DefaultHandler;
+import com.hjhrq1991.library.tbs.OnShouldOverrideUrlLoading;
+import com.hjhrq1991.library.tbs.TbsBridgeWebView;
 import com.tencent.smtt.sdk.WebChromeClient;
 import com.tencent.smtt.sdk.WebSettings;
 import com.tencent.smtt.sdk.WebView;

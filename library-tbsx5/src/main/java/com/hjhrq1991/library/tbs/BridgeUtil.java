@@ -1,4 +1,4 @@
-package com.hjhrq1991.library;
+package com.hjhrq1991.library.tbs;
 
 import android.content.Context;
 import android.text.TextUtils;

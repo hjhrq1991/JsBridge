@@ -31,7 +31,7 @@ publish {
     localProps.load(new FileInputStream(file('../gradle.properties')))
 
     userOrg = localProps.USERORG
-    groupId = localProps.GROUPID
+    groupId = localProps.X5_GROUPID
     artifactId = localProps.X5_ARTIFACTID
     publishVersion = localProps.X5_PUBLISHVERSION
     desc = localProps.DESC
