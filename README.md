@@ -1,3 +1,7 @@
+本项目共有两个部分：
+1.基于系统的JsBridge；
+2.基于Tbs X5内核的JsBridge；
+
 # 一、JsBridge
 基于https://github.com/lzyzsd/JsBridge 优化改进而来的Android JsBridge
 
