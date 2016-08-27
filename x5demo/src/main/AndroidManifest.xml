@@ -30,11 +30,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <meta-data
-            android:name="QBSDKAppKey"
-            android:value="eXz0KtuOArWDFYyHDMhIzrT0" />
-
     </application>
 
 </manifest>
