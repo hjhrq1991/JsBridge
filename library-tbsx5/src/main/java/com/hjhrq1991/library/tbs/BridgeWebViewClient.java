@@ -1,6 +1,7 @@
 package com.hjhrq1991.library.tbs;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.tencent.smtt.sdk.WebView;
 import com.tencent.smtt.sdk.WebViewClient;
@@ -17,7 +18,10 @@ public class BridgeWebViewClient extends WebViewClient {
      * 是否重定向，避免web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
      */
     private boolean isRedirected;
-
+    /**
+     * onPageStarted连续调用次数,避免渲染立马跳转可能连续调用onPageStarted多次并且调用shouldOverrideUrlLoading后不调用onPageStarted引起的js桥未初始化问题
+     */
+    private int onPageStartedCount = 0;
     private OnShouldOverrideUrlLoading onShouldOverrideUrlLoading;
 
     public BridgeWebViewClient(TbsBridgeWebView webView) {
@@ -31,7 +35,10 @@ public class BridgeWebViewClient extends WebViewClient {
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
-        isRedirected = true;
+        if (onPageStartedCount < 2) {
+            isRedirected = true;
+        }
+        onPageStartedCount = 0;
 
         try {
             url = URLDecoder.decode(url, "UTF-8");
@@ -59,6 +66,7 @@ public class BridgeWebViewClient extends WebViewClient {
         super.onPageStarted(view, url, favicon);
         //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
         isRedirected = false;
+        onPageStartedCount++;
 
         if (onShouldOverrideUrlLoading != null) {
             onShouldOverrideUrlLoading.onPageStarted(view, url, favicon);
