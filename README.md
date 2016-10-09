@@ -16,7 +16,7 @@
 <dependency>
   <groupId>com.hjhrq1991.library</groupId>
   <artifactId>jsbridge</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
   <type>pom</type>
 </dependency>
 ```
@@ -24,7 +24,7 @@
 添加gradle依赖
 
 ```gradle
-compile 'com.hjhrq1991.library:jsbridge:1.0.5'
+compile 'com.hjhrq1991.library:jsbridge:1.0.6'
 ```
 
 在你的布局上添加BridgeWebView
@@ -166,7 +166,7 @@ TbsBridgeWebView基于Tbs(腾讯浏览服务)X5内核，结合JsBridge的自定�
 <dependency>
 <groupId>com.hjhrq1991.library.tbs</groupId>
 <artifactId>tbsjsbridge</artifactId>
-<version>1.0.0</version>
+<version>1.0.1</version>
 <type>pom</type>
 </dependency>
 ```
@@ -174,7 +174,7 @@ TbsBridgeWebView基于Tbs(腾讯浏览服务)X5内核，结合JsBridge的自定�
 添加gradle依赖
 
 ```gradle
-compile 'com.hjhrq1991.library.tbs:tbsjsbridge:1.0.0'
+compile 'com.hjhrq1991.library.tbs:tbsjsbridge:1.0.1'
 ```
 
 添加权限
