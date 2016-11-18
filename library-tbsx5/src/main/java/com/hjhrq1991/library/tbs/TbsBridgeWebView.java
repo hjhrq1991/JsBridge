@@ -204,7 +204,7 @@ public class TbsBridgeWebView extends WebView implements WebViewJavascriptBridge
      * register handler,so that javascript can call it
      *
      * @param handlerName handlerName
-     * @param handler Handler
+     * @param handler     Handler
      */
     public void registerHandler(String handlerName, BridgeHandler handler) {
         if (handler != null) {
@@ -216,8 +216,8 @@ public class TbsBridgeWebView extends WebView implements WebViewJavascriptBridge
      * call javascript registered handler
      *
      * @param handlerName handlerName
-     * @param data data
-     * @param callBack callBack
+     * @param data        data
+     * @param callBack    callBack
      */
     public void callHandler(String handlerName, String data, CallBackFunction callBack) {
         doSend(handlerName, data, callBack);
@@ -227,11 +227,18 @@ public class TbsBridgeWebView extends WebView implements WebViewJavascriptBridge
         bridgeWebViewClient.setOnShouldOverrideUrlLoading(onShouldOverrideUrlLoading);
     }
 
+    /**
+     * 销毁时调用，移除listener
+     */
+    public void removeOnShouldOverrideUrlLoading() {
+        if (bridgeWebViewClient != null)
+            bridgeWebViewClient.removeListener();
+    }
 
     /**
      * @param customJs 自定义桥名，可为空，为空时使用默认桥名
-     * 自定义桥名回调，如用自定义桥名，请copy一份WebViewJavascriptBridge.js替换文件名
-     * 及脚本内所有包含"WebViewJavascriptBridge"的内容为你的自定义桥名
+     *                 自定义桥名回调，如用自定义桥名，请copy一份WebViewJavascriptBridge.js替换文件名
+     *                 及脚本内所有包含"WebViewJavascriptBridge"的内容为你的自定义桥名
      * @author hjhrq1991 created at 6/20/16 17:32.
      */
     public void setCustom(String customJs) {

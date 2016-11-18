@@ -32,6 +32,12 @@ public class BridgeWebViewClient extends WebViewClient {
         this.onShouldOverrideUrlLoading = onShouldOverrideUrlLoading;
     }
 
+    public void removeListener() {
+        if (onShouldOverrideUrlLoading != null) {
+            onShouldOverrideUrlLoading = null;
+        }
+    }
+
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
