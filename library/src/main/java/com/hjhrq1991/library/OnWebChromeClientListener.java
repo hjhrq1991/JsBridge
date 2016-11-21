@@ -15,8 +15,6 @@ import android.webkit.WebView;
 
 /**
  * @author hjhrq1991 created at 16/11/21 10 23.
- * @Package com.hjhrq1991.library.tbs
- * @Description:
  */
 public interface OnWebChromeClientListener {
 
