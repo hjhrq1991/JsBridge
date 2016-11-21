@@ -2,12 +2,23 @@ package com.hjhrq1991.library.tbs;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.View;
 
+import com.tencent.smtt.export.external.interfaces.ConsoleMessage;
+import com.tencent.smtt.export.external.interfaces.GeolocationPermissionsCallback;
+import com.tencent.smtt.export.external.interfaces.IX5WebChromeClient;
+import com.tencent.smtt.export.external.interfaces.JsPromptResult;
+import com.tencent.smtt.export.external.interfaces.JsResult;
+import com.tencent.smtt.sdk.ValueCallback;
+import com.tencent.smtt.sdk.WebChromeClient;
+import com.tencent.smtt.sdk.WebStorage;
 import com.tencent.smtt.sdk.WebView;
 
 import java.util.ArrayList;
@@ -230,9 +241,225 @@ public class TbsBridgeWebView extends WebView implements WebViewJavascriptBridge
     /**
      * 销毁时调用，移除listener
      */
-    public void removeOnShouldOverrideUrlLoading() {
-        if (bridgeWebViewClient != null)
+    public void removeListener() {
+        if (bridgeWebViewClient != null) {
             bridgeWebViewClient.removeListener();
+        }
+        if (onWebChromeClientListener != null) {
+            onWebChromeClientListener = null;
+        }
+    }
+
+    private OnWebChromeClientListener onWebChromeClientListener;
+
+    public void setWebChromeClientListener(OnWebChromeClientListener onWebChromeClientListener) {
+        this.onWebChromeClientListener = onWebChromeClientListener;
+        setWebChromeClient(newWebChromeClient());
+    }
+
+    public void setWebChromeClientListener(WebChromeClientListener webChromeClientListener) {
+        this.onWebChromeClientListener = webChromeClientListener;
+        setWebChromeClient(newWebChromeClient());
+    }
+
+    private WebChromeClient newWebChromeClient() {
+        WebChromeClient wvcc = new WebChromeClient() {
+            @Override
+            public void onExceededDatabaseQuota(String s, String s1, long l, long l1, long l2, WebStorage.QuotaUpdater quotaUpdater) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onExceededDatabaseQuota(s, s1, l, l1, l2, quotaUpdater);
+                } else {
+                    super.onExceededDatabaseQuota(s, s1, l, l1, l2, quotaUpdater);
+                }
+            }
+
+            @Override
+            public Bitmap getDefaultVideoPoster() {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.getDefaultVideoPoster() :
+                        super.getDefaultVideoPoster();
+            }
+
+            @Override
+            public void getVisitedHistory(ValueCallback<String[]> valueCallback) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.getVisitedHistory(valueCallback);
+                } else {
+                    super.getVisitedHistory(valueCallback);
+                }
+            }
+
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onConsoleMessage(consoleMessage) :
+                        super.onConsoleMessage(consoleMessage);
+            }
+
+            @Override
+            public boolean onCreateWindow(WebView webView, boolean b, boolean b1, android.os.Message message) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onCreateWindow(webView, b, b1, message) :
+                        super.onCreateWindow(webView, b, b1, message);
+            }
+
+            @Override
+            public void onGeolocationPermissionsHidePrompt() {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onGeolocationPermissionsHidePrompt();
+                } else {
+                    super.onGeolocationPermissionsHidePrompt();
+                }
+            }
+
+            @Override
+            public void onGeolocationPermissionsShowPrompt(String s, GeolocationPermissionsCallback geolocationPermissionsCallback) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onGeolocationPermissionsShowPrompt(s, geolocationPermissionsCallback);
+                } else {
+                    super.onGeolocationPermissionsShowPrompt(s, geolocationPermissionsCallback);
+                }
+            }
+
+            @Override
+            public void onHideCustomView() {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onHideCustomView();
+                } else {
+                    super.onHideCustomView();
+                }
+            }
+
+            @Override
+            public boolean onJsAlert(WebView webView, String s, String s1, JsResult jsResult) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsAlert(webView, s, s1, jsResult) :
+                        super.onJsAlert(webView, s, s1, jsResult);
+            }
+
+            @Override
+            public boolean onJsConfirm(WebView webView, String s, String s1, JsResult jsResult) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsConfirm(webView, s, s1, jsResult) :
+                        super.onJsConfirm(webView, s, s1, jsResult);
+            }
+
+            @Override
+            public boolean onJsPrompt(WebView webView, String s, String s1, String s2, JsPromptResult jsPromptResult) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsPrompt(webView, s, s1, s2, jsPromptResult) :
+                        super.onJsPrompt(webView, s, s1, s2, jsPromptResult);
+            }
+
+            @Override
+            public boolean onJsBeforeUnload(WebView webView, String s, String s1, JsResult jsResult) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsBeforeUnload(webView, s, s1, jsResult) :
+                        super.onJsBeforeUnload(webView, s, s1, jsResult);
+            }
+
+            @Override
+            public boolean onJsTimeout() {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsTimeout() :
+                        super.onJsTimeout();
+            }
+
+            @Override
+            public void onProgressChanged(WebView webView, int i) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onProgressChanged(webView, i);
+                } else {
+                    super.onProgressChanged(webView, i);
+                }
+            }
+
+            @Override
+            public void onReachedMaxAppCacheSize(long l, long l1, WebStorage.QuotaUpdater quotaUpdater) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReachedMaxAppCacheSize(l, l1, quotaUpdater);
+                } else {
+                    super.onReachedMaxAppCacheSize(l, l1, quotaUpdater);
+                }
+            }
+
+            @Override
+            public void onReceivedIcon(WebView webView, Bitmap bitmap) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReceivedIcon(webView, bitmap);
+                } else {
+                    super.onReceivedIcon(webView, bitmap);
+                }
+            }
+
+            @Override
+            public void onReceivedTouchIconUrl(WebView webView, String s, boolean b) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReceivedTouchIconUrl(webView, s, b);
+                } else {
+                    super.onReceivedTouchIconUrl(webView, s, b);
+                }
+            }
+
+            @Override
+            public void onReceivedTitle(WebView webView, String s) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReceivedTitle(webView, s);
+                } else {
+                    super.onReceivedTitle(webView, s);
+                }
+            }
+
+            @Override
+            public void onRequestFocus(WebView webView) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onRequestFocus(webView);
+                } else {
+                    super.onRequestFocus(webView);
+                }
+            }
+
+            @Override
+            public void onShowCustomView(View view, IX5WebChromeClient.CustomViewCallback customViewCallback) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onShowCustomView(view, customViewCallback);
+                } else {
+                    super.onShowCustomView(view, customViewCallback);
+                }
+            }
+
+            @Override
+            public void onShowCustomView(View view, int i, IX5WebChromeClient.CustomViewCallback customViewCallback) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onShowCustomView(view, i, customViewCallback);
+                } else {
+                    super.onShowCustomView(view, i, customViewCallback);
+                }
+            }
+
+            @Override
+            public void onCloseWindow(WebView webView) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onCloseWindow(webView);
+                } else {
+                    super.onCloseWindow(webView);
+                }
+            }
+
+            @Override
+            public View getVideoLoadingProgressView() {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.getVideoLoadingProgressView() :
+                        super.getVideoLoadingProgressView();
+            }
+
+            @Override
+            public void openFileChooser(ValueCallback<Uri> valueCallback, String s, String s1) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.openFileChooser(valueCallback, s, s1);
+                } else {
+                    super.openFileChooser(valueCallback, s, s1);
+                }
+            }
+
+            @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> valueCallback, FileChooserParams fileChooserParams) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onShowFileChooser(webView, valueCallback, fileChooserParams) :
+                        super.onShowFileChooser(webView, valueCallback, fileChooserParams);
+            }
+        };
+        return wvcc;
     }
 
     /**

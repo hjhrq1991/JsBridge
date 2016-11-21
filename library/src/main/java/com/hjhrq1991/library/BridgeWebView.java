@@ -2,11 +2,22 @@ package com.hjhrq1991.library;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.View;
+import android.webkit.ConsoleMessage;
+import android.webkit.GeolocationPermissions;
+import android.webkit.JsPromptResult;
+import android.webkit.JsResult;
+import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebStorage;
 import android.webkit.WebView;
 
 import java.util.ArrayList;
@@ -229,9 +240,246 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     /**
      * 销毁时调用，移除listener
      */
-    public void removeOnShouldOverrideUrlLoading() {
-        if (bridgeWebViewClient != null)
+    /**
+     * 销毁时调用，移除listener
+     */
+    public void removeListener() {
+        if (bridgeWebViewClient != null) {
             bridgeWebViewClient.removeListener();
+        }
+        if (onWebChromeClientListener != null) {
+            onWebChromeClientListener = null;
+        }
+    }
+
+    private OnWebChromeClientListener onWebChromeClientListener;
+
+    public void setWebChromeClientListener(OnWebChromeClientListener onWebChromeClientListener) {
+        this.onWebChromeClientListener = onWebChromeClientListener;
+        setWebChromeClient(newWebChromeClient());
+    }
+
+    public void setWebChromeClientListener(WebChromeClientListener webChromeClientListener) {
+        this.onWebChromeClientListener = webChromeClientListener;
+        setWebChromeClient(newWebChromeClient());
+    }
+
+    private WebChromeClient newWebChromeClient() {
+        WebChromeClient wvcc = new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onProgressChanged(view, newProgress);
+                } else {
+                    super.onProgressChanged(view, newProgress);
+                }
+            }
+
+            @Override
+            public void onReceivedTitle(WebView view, String title) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReceivedTitle(view, title);
+                } else {
+                    super.onReceivedTitle(view, title);
+                }
+            }
+
+            @Override
+            public void onReceivedIcon(WebView view, Bitmap icon) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReceivedIcon(view, icon);
+                } else {
+                    super.onReceivedIcon(view, icon);
+                }
+            }
+
+            @Override
+            public void onReceivedTouchIconUrl(WebView view, String url, boolean precomposed) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReceivedTouchIconUrl(view, url, precomposed);
+                } else {
+                    super.onReceivedTouchIconUrl(view, url, precomposed);
+                }
+            }
+
+            @Override
+            public void onShowCustomView(View view, CustomViewCallback callback) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onShowCustomView(view, callback);
+                } else {
+                    super.onShowCustomView(view, callback);
+                }
+            }
+
+            @Override
+            public void onShowCustomView(View view, int requestedOrientation, CustomViewCallback callback) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onShowCustomView(view, requestedOrientation, callback);
+                } else {
+                    super.onShowCustomView(view, requestedOrientation, callback);
+                }
+            }
+
+            @Override
+            public void onHideCustomView() {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onHideCustomView();
+                } else {
+                    super.onHideCustomView();
+                }
+            }
+
+            @Override
+            public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, android.os.Message resultMsg) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onCreateWindow(view, isDialog, isUserGesture, resultMsg) :
+                        super.onCreateWindow(view, isDialog, isUserGesture, resultMsg);
+            }
+
+            @Override
+            public void onRequestFocus(WebView view) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onRequestFocus(view);
+                } else {
+                    super.onRequestFocus(view);
+                }
+            }
+
+            @Override
+            public void onCloseWindow(WebView window) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onCloseWindow(window);
+                } else {
+                    super.onCloseWindow(window);
+                }
+            }
+
+            @Override
+            public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsAlert(view, url, message, result) :
+                        super.onJsAlert(view, url, message, result);
+            }
+
+            @Override
+            public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsConfirm(view, url, message, result) :
+                        super.onJsConfirm(view, url, message, result);
+            }
+
+            @Override
+            public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsPrompt(view, url, message, defaultValue, result) :
+                        super.onJsPrompt(view, url, message, defaultValue, result);
+            }
+
+            @Override
+            public boolean onJsBeforeUnload(WebView view, String url, String message, JsResult result) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsBeforeUnload(view, url, message, result) :
+                        super.onJsBeforeUnload(view, url, message, result);
+            }
+
+            @Override
+            public void onExceededDatabaseQuota(String url, String databaseIdentifier, long quota, long estimatedDatabaseSize, long totalQuota, WebStorage.QuotaUpdater quotaUpdater) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onExceededDatabaseQuota(url, databaseIdentifier, quota, estimatedDatabaseSize, totalQuota, quotaUpdater);
+                } else {
+                    super.onExceededDatabaseQuota(url, databaseIdentifier, quota, estimatedDatabaseSize, totalQuota, quotaUpdater);
+                }
+            }
+
+            @Override
+            public void onReachedMaxAppCacheSize(long requiredStorage, long quota, WebStorage.QuotaUpdater quotaUpdater) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
+                } else {
+                    super.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
+                }
+            }
+
+            @Override
+            public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onGeolocationPermissionsShowPrompt(origin, callback);
+                } else {
+                    super.onGeolocationPermissionsShowPrompt(origin, callback);
+                }
+            }
+
+            @Override
+            public void onGeolocationPermissionsHidePrompt() {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onGeolocationPermissionsHidePrompt();
+                } else {
+                    super.onGeolocationPermissionsHidePrompt();
+                }
+            }
+
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onPermissionRequest(request);
+                } else {
+                    super.onPermissionRequest(request);
+                }
+            }
+
+            @Override
+            public void onPermissionRequestCanceled(PermissionRequest request) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onPermissionRequestCanceled(request);
+                } else {
+                    super.onPermissionRequestCanceled(request);
+                }
+            }
+
+            @Override
+            public boolean onJsTimeout() {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onJsTimeout() :
+                        super.onJsTimeout();
+            }
+
+            @Override
+            public void onConsoleMessage(String message, int lineNumber, String sourceID) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onConsoleMessage(message, lineNumber, sourceID);
+                } else {
+                    super.onConsoleMessage(message, lineNumber, sourceID);
+                }
+            }
+
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onConsoleMessage(consoleMessage) :
+                        super.onConsoleMessage(consoleMessage);
+            }
+
+            @Override
+            public Bitmap getDefaultVideoPoster() {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.getDefaultVideoPoster() :
+                        super.getDefaultVideoPoster();
+            }
+
+            @Override
+            public View getVideoLoadingProgressView() {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.getVideoLoadingProgressView() :
+                        super.getVideoLoadingProgressView();
+            }
+
+            @Override
+            public void getVisitedHistory(ValueCallback<String[]> callback) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.getVisitedHistory(callback);
+                } else {
+                    super.getVisitedHistory(callback);
+                }
+            }
+
+            @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                return onWebChromeClientListener != null ? onWebChromeClientListener.onShowFileChooser(webView, filePathCallback, fileChooserParams) :
+                        super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+            }
+        };
+        return wvcc;
     }
 
     /**
