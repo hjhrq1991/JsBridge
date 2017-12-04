@@ -56,6 +56,6 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':library')
-//    compile 'com.hjhrq1991.library:jsbridge:1.0.6'
+//    compile 'com.hjhrq1991.library:jsbridge:1.0.9'
     compile 'com.android.support:appcompat-v7:25.3.1'
 }

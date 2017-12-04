@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -85,6 +86,12 @@ public class MainActivity extends Activity implements OnClickListener {
             }
 
             @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Log.i(TAG, "超链接：" + url);
+                return false;
+            }
+
+            @Override
             public void onPageStarted(WebView view, String url, Bitmap bitmap) {
                 if (btn1 != null) {
                     btn1.setVisibility(View.GONE);
@@ -115,7 +122,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
-                // TODO Auto-generated method stub
                 super.onProgressChanged(view, newProgress);
             }
         });

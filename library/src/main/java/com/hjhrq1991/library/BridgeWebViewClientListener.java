@@ -18,13 +18,16 @@ import android.webkit.WebView;
 public interface BridgeWebViewClientListener {
 
     /**
-     * @param view webview
-     * @param url  url
-     * @return boolean
-     * 非js桥的超链接回调回去自行处理
+     * 非js桥的超链接回调回去自行处理，api21以下会调用
+     *
      * @author hjhrq1991 created at 5/10/16 15:12.
      */
     boolean shouldOverrideUrlLoading(WebView view, String url);
+
+    /**
+     * 非js桥的超链接回调回去自行处理，api21及以上会调用
+     */
+    boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request);
 
     void onPageStarted(WebView view, String url, Bitmap favicon);
 
@@ -57,8 +60,6 @@ public interface BridgeWebViewClientListener {
     void onScaleChanged(WebView view, float oldScale, float newScale);
 
     void onReceivedLoginRequest(WebView view, String realm, String account, String args);
-
-    boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request);
 
     void onPageCommitVisible(WebView view, String url);
 

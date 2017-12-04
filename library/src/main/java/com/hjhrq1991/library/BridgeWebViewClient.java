@@ -75,6 +75,36 @@ public class BridgeWebViewClient extends WebViewClient {
     }
 
     @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        String url = request.getUrl().toString();
+        //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
+        if (onPageStartedCount < 2) {
+            isRedirected = true;
+        }
+        onPageStartedCount = 0;
+
+        try {
+            url = URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        if (url.startsWith(BridgeUtil.YY_RETURN_DATA)) { // 如果是返回数据
+            webView.handlerReturnData(url);
+            return true;
+        } else if (url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) { //
+            webView.flushMessageQueue();
+            return true;
+        } else {
+            if (bridgeWebViewClientListener != null) {
+                return bridgeWebViewClientListener.shouldOverrideUrlLoading(view, request);
+            } else {
+                return super.shouldOverrideUrlLoading(view, request);
+            }
+        }
+    }
+
+    @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
         //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
@@ -219,15 +249,6 @@ public class BridgeWebViewClient extends WebViewClient {
         super.onReceivedLoginRequest(view, realm, account, args);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onReceivedLoginRequest(view, realm, account, args);
-        }
-    }
-
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        if (bridgeWebViewClientListener != null) {
-            return bridgeWebViewClientListener.shouldOverrideUrlLoading(view, request);
-        } else {
-            return super.shouldOverrideUrlLoading(view, request);
         }
     }
 
