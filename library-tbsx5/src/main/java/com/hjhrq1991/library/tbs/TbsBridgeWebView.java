@@ -234,8 +234,8 @@ public class TbsBridgeWebView extends WebView implements WebViewJavascriptBridge
         doSend(handlerName, data, callBack);
     }
 
-    public void setOnShouldOverrideUrlLoading(OnShouldOverrideUrlLoading onShouldOverrideUrlLoading) {
-        bridgeWebViewClient.setOnShouldOverrideUrlLoading(onShouldOverrideUrlLoading);
+    public void setOnShouldOverrideUrlLoading(BridgeWebViewClientListener bridgeWebViewClientListener) {
+        bridgeWebViewClient.setBridgeWebViewClientListener(bridgeWebViewClientListener);
     }
 
     /**

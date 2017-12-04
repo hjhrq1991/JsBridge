@@ -1,6 +1,14 @@
 package com.hjhrq1991.library;
 
 import android.graphics.Bitmap;
+import android.net.http.SslError;
+import android.view.InputEvent;
+import android.view.KeyEvent;
+import android.webkit.ClientCertRequest;
+import android.webkit.HttpAuthHandler;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -21,19 +29,19 @@ public class BridgeWebViewClient extends WebViewClient {
      */
     private int onPageStartedCount = 0;
 
-    private OnShouldOverrideUrlLoading onShouldOverrideUrlLoading;
+    private BridgeWebViewClientListener bridgeWebViewClientListener;
 
     public BridgeWebViewClient(BridgeWebView webView) {
         this.webView = webView;
     }
 
-    public void setOnShouldOverrideUrlLoading(OnShouldOverrideUrlLoading onShouldOverrideUrlLoading) {
-        this.onShouldOverrideUrlLoading = onShouldOverrideUrlLoading;
+    public void setBridgeWebViewClientListener(BridgeWebViewClientListener bridgeWebViewClientListener) {
+        this.bridgeWebViewClientListener = bridgeWebViewClientListener;
     }
 
     public void removeListener() {
-        if (onShouldOverrideUrlLoading != null) {
-            onShouldOverrideUrlLoading = null;
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener = null;
         }
     }
 
@@ -58,8 +66,8 @@ public class BridgeWebViewClient extends WebViewClient {
             webView.flushMessageQueue();
             return true;
         } else {
-            if (onShouldOverrideUrlLoading != null) {
-                return onShouldOverrideUrlLoading.onShouldOverrideUrlLoading(view, url);
+            if (bridgeWebViewClientListener != null) {
+                return bridgeWebViewClientListener.shouldOverrideUrlLoading(view, url);
             } else {
                 return super.shouldOverrideUrlLoading(view, url);
             }
@@ -73,8 +81,8 @@ public class BridgeWebViewClient extends WebViewClient {
         isRedirected = false;
         onPageStartedCount++;
 
-        if (onShouldOverrideUrlLoading != null) {
-            onShouldOverrideUrlLoading.onPageStarted(view, url, favicon);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onPageStarted(view, url, favicon);
         }
     }
 
@@ -94,16 +102,131 @@ public class BridgeWebViewClient extends WebViewClient {
             webView.setStartupMessage(null);
         }
 
-        if (onShouldOverrideUrlLoading != null) {
-            onShouldOverrideUrlLoading.onPageFinished(view, url);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onPageFinished(view, url);
         }
     }
 
     @Override
     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
         super.onReceivedError(view, errorCode, description, failingUrl);
-        if (onShouldOverrideUrlLoading != null) {
-            onShouldOverrideUrlLoading.onReceivedError(view, errorCode, description, failingUrl);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onReceivedError(view, errorCode, description, failingUrl);
+        }
+    }
+
+    @Override
+    public void onLoadResource(WebView view, String url) {
+        super.onLoadResource(view, url);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onLoadResource(view, url);
+        }
+    }
+
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+        if (bridgeWebViewClientListener != null) {
+            return bridgeWebViewClientListener.shouldInterceptRequest(view, url);
+        } else {
+            return super.shouldInterceptRequest(view, url);
+        }
+    }
+
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        if (bridgeWebViewClientListener != null) {
+            return bridgeWebViewClientListener.shouldInterceptRequest(view, request);
+        } else {
+            return super.shouldInterceptRequest(view, request);
+        }
+    }
+
+    @Override
+    public void onTooManyRedirects(WebView view, android.os.Message cancelMsg, android.os.Message continueMsg) {
+        super.onTooManyRedirects(view, cancelMsg, continueMsg);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onTooManyRedirects(view, cancelMsg, continueMsg);
+        }
+    }
+
+    @Override
+    public void onFormResubmission(WebView view, android.os.Message dontResend, android.os.Message resend) {
+        super.onFormResubmission(view, dontResend, resend);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onFormResubmission(view, dontResend, resend);
+        }
+    }
+
+    @Override
+    public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+        super.doUpdateVisitedHistory(view, url, isReload);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.doUpdateVisitedHistory(view, url, isReload);
+        }
+    }
+
+    @Override
+    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        super.onReceivedSslError(view, handler, error);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onReceivedSslError(view, handler, error);
+        }
+    }
+
+    @Override
+    public void onReceivedClientCertRequest(WebView view, ClientCertRequest request) {
+        super.onReceivedClientCertRequest(view, request);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onReceivedClientCertRequest(view, request);
+        }
+    }
+
+    @Override
+    public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
+        super.onReceivedHttpAuthRequest(view, handler, host, realm);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onReceivedHttpAuthRequest(view, handler, host, realm);
+        }
+    }
+
+    @Override
+    public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event) {
+        if (bridgeWebViewClientListener != null) {
+            return bridgeWebViewClientListener.shouldOverrideKeyEvent(view, event);
+        } else {
+            return super.shouldOverrideKeyEvent(view, event);
+        }
+    }
+
+    @Override
+    public void onUnhandledKeyEvent(WebView view, KeyEvent event) {
+        super.onUnhandledKeyEvent(view, event);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onUnhandledKeyEvent(view, event);
+        }
+    }
+
+    @Override
+    public void onUnhandledInputEvent(WebView view, InputEvent event) {
+        super.onUnhandledInputEvent(view, event);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onUnhandledInputEvent(view, event);
+        }
+    }
+
+    @Override
+    public void onScaleChanged(WebView view, float oldScale, float newScale) {
+        super.onScaleChanged(view, oldScale, newScale);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onScaleChanged(view, oldScale, newScale);
+        }
+    }
+
+    @Override
+    public void onReceivedLoginRequest(WebView view, String realm, String account, String args) {
+        super.onReceivedLoginRequest(view, realm, account, args);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onReceivedLoginRequest(view, realm, account, args);
         }
     }
 }
