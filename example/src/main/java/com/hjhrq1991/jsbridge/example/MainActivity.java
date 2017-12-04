@@ -16,13 +16,13 @@ import com.hjhrq1991.library.BridgeHandler;
 import com.hjhrq1991.library.BridgeWebView;
 import com.hjhrq1991.library.CallBackFunction;
 import com.hjhrq1991.library.DefaultHandler;
-import com.hjhrq1991.library.OnShouldOverrideUrlLoading;
+import com.hjhrq1991.library.SimpleBridgeWebViewClientListener;
 
 /**
  * @author hjhrq1991 created at 4/28/16 14:33.
  * @Description: js桥demo实例
  */
-public class MainActivity extends Activity implements OnClickListener, OnShouldOverrideUrlLoading {
+public class MainActivity extends Activity implements OnClickListener {
 
     private final String TAG = "MainActivity";
 
@@ -77,7 +77,34 @@ public class MainActivity extends Activity implements OnClickListener, OnShouldO
         btn3.setOnClickListener(this);
 
         //=======================js桥使用改方法替换原有setWebViewClient()方法==========================
-        webView.setOnShouldOverrideUrlLoading(this);
+        webView.setBridgeWebViewClientListener(new SimpleBridgeWebViewClientListener() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.i(TAG, "超链接：" + url);
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap bitmap) {
+                if (btn1 != null) {
+                    btn1.setVisibility(View.GONE);
+                }
+
+                if (btn2 != null) {
+                    btn2.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+
+            }
+        });
         //=======================此方法必须调用==========================
         webView.setDefaultHandler(new DefaultHandler());
         webView.setWebChromeClient(new WebChromeClient() {
@@ -193,33 +220,6 @@ public class MainActivity extends Activity implements OnClickListener, OnShouldO
 
                 break;
         }
-    }
-
-    @Override
-    public boolean onShouldOverrideUrlLoading(WebView view, String url) {
-        Log.i(TAG, "超链接：" + url);
-        return false;
-    }
-
-    @Override
-    public void onPageStarted(WebView view, String url, Bitmap bitmap) {
-        if (btn1 != null) {
-            btn1.setVisibility(View.GONE);
-        }
-
-        if (btn2 != null) {
-            btn2.setVisibility(View.GONE);
-        }
-    }
-
-    @Override
-    public void onPageFinished(WebView view, String url) {
-
-    }
-
-    @Override
-    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-
     }
 
     @Override

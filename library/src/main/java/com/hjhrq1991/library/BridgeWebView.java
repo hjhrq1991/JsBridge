@@ -233,7 +233,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         doSend(handlerName, data, callBack);
     }
 
-    public void setOnShouldOverrideUrlLoading(BridgeWebViewClientListener bridgeWebViewClientListener) {
+    public void setBridgeWebViewClientListener(BridgeWebViewClientListener bridgeWebViewClientListener) {
         bridgeWebViewClient.setBridgeWebViewClientListener(bridgeWebViewClientListener);
     }
 

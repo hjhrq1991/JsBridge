@@ -2,11 +2,11 @@ package com.hjhrq1991.library;
 
 import android.graphics.Bitmap;
 import android.net.http.SslError;
-import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -207,14 +207,6 @@ public class BridgeWebViewClient extends WebViewClient {
     }
 
     @Override
-    public void onUnhandledInputEvent(WebView view, InputEvent event) {
-        super.onUnhandledInputEvent(view, event);
-        if (bridgeWebViewClientListener != null) {
-            bridgeWebViewClientListener.onUnhandledInputEvent(view, event);
-        }
-    }
-
-    @Override
     public void onScaleChanged(WebView view, float oldScale, float newScale) {
         super.onScaleChanged(view, oldScale, newScale);
         if (bridgeWebViewClientListener != null) {
@@ -227,6 +219,39 @@ public class BridgeWebViewClient extends WebViewClient {
         super.onReceivedLoginRequest(view, realm, account, args);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onReceivedLoginRequest(view, realm, account, args);
+        }
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        if (bridgeWebViewClientListener != null) {
+            return bridgeWebViewClientListener.shouldOverrideUrlLoading(view, request);
+        } else {
+            return super.shouldOverrideUrlLoading(view, request);
+        }
+    }
+
+    @Override
+    public void onPageCommitVisible(WebView view, String url) {
+        super.onPageCommitVisible(view, url);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onPageCommitVisible(view, url);
+        }
+    }
+
+    @Override
+    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+        super.onReceivedError(view, request, error);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onReceivedError(view, request, error);
+        }
+    }
+
+    @Override
+    public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+        super.onReceivedHttpError(view, request, errorResponse);
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onReceivedHttpError(view, request, errorResponse);
         }
     }
 }

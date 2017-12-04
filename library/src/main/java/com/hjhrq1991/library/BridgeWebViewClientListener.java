@@ -2,11 +2,11 @@ package com.hjhrq1991.library;
 
 import android.graphics.Bitmap;
 import android.net.http.SslError;
-import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -54,9 +54,15 @@ public interface BridgeWebViewClientListener {
 
     void onUnhandledKeyEvent(WebView view, KeyEvent event);
 
-    void onUnhandledInputEvent(WebView view, InputEvent event);
-
     void onScaleChanged(WebView view, float oldScale, float newScale);
 
     void onReceivedLoginRequest(WebView view, String realm, String account, String args);
+
+    boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request);
+
+    void onPageCommitVisible(WebView view, String url);
+
+    void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error);
+
+    void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse);
 }
