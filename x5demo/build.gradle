@@ -12,6 +12,10 @@ android {
         versionName "1.0"
     }
 
+    lintOptions {
+        abortOnError false
+    }
+
     signingConfigs {
         def Properties localProps = new Properties()
         localProps.load(new FileInputStream(file('../local.properties')))
