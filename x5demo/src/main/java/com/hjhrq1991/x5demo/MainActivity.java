@@ -1,9 +1,11 @@
 package com.hjhrq1991.x5demo;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -15,6 +17,8 @@ import com.hjhrq1991.library.tbs.CallBackFunction;
 import com.hjhrq1991.library.tbs.DefaultHandler;
 import com.hjhrq1991.library.tbs.SimpleBridgeWebViewClientListener;
 import com.hjhrq1991.library.tbs.TbsBridgeWebView;
+import com.tencent.smtt.export.external.interfaces.SslError;
+import com.tencent.smtt.export.external.interfaces.SslErrorHandler;
 import com.tencent.smtt.sdk.WebChromeClient;
 import com.tencent.smtt.sdk.WebSettings;
 import com.tencent.smtt.sdk.WebView;
@@ -106,6 +110,49 @@ public class MainActivity extends Activity implements View.OnClickListener {
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
 
+            }
+
+            @Override
+            public boolean onReceivedSslError(WebView webView, final SslErrorHandler sslErrorHandler, SslError sslError) {
+                String message;
+                switch (sslError.getPrimaryError()) {
+                    case android.net.http.SslError.SSL_UNTRUSTED:
+                        message = "证书颁发机构不受信任";
+                        break;
+                    case android.net.http.SslError.SSL_EXPIRED:
+                        message = "证书过期";
+                        break;
+                    case android.net.http.SslError.SSL_IDMISMATCH:
+                        message = "网站名称与证书不一致";
+                        break;
+                    case android.net.http.SslError.SSL_NOTYETVALID:
+                        message = "证书无效";
+                        break;
+                    case android.net.http.SslError.SSL_DATE_INVALID:
+                        message = "证书日期无效";
+                        break;
+                    case android.net.http.SslError.SSL_INVALID:
+                    default:
+                        message = "证书错误";
+                        break;
+                }
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("提示").setMessage(message + "，是否继续").setCancelable(true)
+                        .setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                sslErrorHandler.proceed();
+                            }
+                        })
+                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                sslErrorHandler.cancel();
+                            }
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+                return true;
             }
         });
         //=======================此方法必须调用==========================

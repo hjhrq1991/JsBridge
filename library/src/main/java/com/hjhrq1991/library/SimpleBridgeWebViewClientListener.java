@@ -25,6 +25,11 @@ public class SimpleBridgeWebViewClientListener implements BridgeWebViewClientLis
     }
 
     @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        return false;
+    }
+
+    @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
 
     }
@@ -55,13 +60,13 @@ public class SimpleBridgeWebViewClientListener implements BridgeWebViewClientLis
     }
 
     @Override
-    public void onTooManyRedirects(WebView view, Message cancelMsg, Message continueMsg) {
-
+    public boolean onTooManyRedirects(WebView view, Message cancelMsg, Message continueMsg) {
+        return false;
     }
 
     @Override
-    public void onFormResubmission(WebView view, Message dontResend, Message resend) {
-
+    public boolean onFormResubmission(WebView view, Message dontResend, Message resend) {
+        return false;
     }
 
     @Override
@@ -70,18 +75,18 @@ public class SimpleBridgeWebViewClientListener implements BridgeWebViewClientLis
     }
 
     @Override
-    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-
+    public boolean onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        return false;
     }
 
     @Override
-    public void onReceivedClientCertRequest(WebView view, ClientCertRequest request) {
-
+    public boolean onReceivedClientCertRequest(WebView view, ClientCertRequest request) {
+        return false;
     }
 
     @Override
-    public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
-
+    public boolean onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
+        return false;
     }
 
     @Override
@@ -90,8 +95,8 @@ public class SimpleBridgeWebViewClientListener implements BridgeWebViewClientLis
     }
 
     @Override
-    public void onUnhandledKeyEvent(WebView view, KeyEvent event) {
-
+    public boolean onUnhandledKeyEvent(WebView view, KeyEvent event) {
+        return false;
     }
 
     @Override
@@ -105,18 +110,13 @@ public class SimpleBridgeWebViewClientListener implements BridgeWebViewClientLis
     }
 
     @Override
-    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        return false;
-    }
-
-    @Override
     public void onPageCommitVisible(WebView view, String url) {
 
     }
 
     @Override
-    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-
+    public boolean onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+        return false;
     }
 
     @Override

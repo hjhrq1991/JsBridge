@@ -41,21 +41,21 @@ public interface BridgeWebViewClientListener {
 
     WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request);
 
-    void onTooManyRedirects(WebView view, android.os.Message cancelMsg, android.os.Message continueMsg);
+    boolean onTooManyRedirects(WebView view, android.os.Message cancelMsg, android.os.Message continueMsg);
 
-    void onFormResubmission(WebView view, android.os.Message dontResend, android.os.Message resend);
+    boolean onFormResubmission(WebView view, android.os.Message dontResend, android.os.Message resend);
 
     void doUpdateVisitedHistory(WebView view, String url, boolean isReload);
 
-    void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error);
+    boolean onReceivedSslError(WebView view, SslErrorHandler handler, SslError error);
 
-    void onReceivedClientCertRequest(WebView view, ClientCertRequest request);
+    boolean onReceivedClientCertRequest(WebView view, ClientCertRequest request);
 
-    void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm);
+    boolean onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm);
 
     boolean shouldOverrideKeyEvent(WebView view, KeyEvent event);
 
-    void onUnhandledKeyEvent(WebView view, KeyEvent event);
+    boolean onUnhandledKeyEvent(WebView view, KeyEvent event);
 
     void onScaleChanged(WebView view, float oldScale, float newScale);
 
@@ -63,7 +63,7 @@ public interface BridgeWebViewClientListener {
 
     void onPageCommitVisible(WebView view, String url);
 
-    void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error);
+    boolean onReceivedError(WebView view, WebResourceRequest request, WebResourceError error);
 
     void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse);
 }

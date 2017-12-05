@@ -45,13 +45,13 @@ public interface BridgeWebViewClientListener {
 
     void doUpdateVisitedHistory(WebView webView, String s, boolean b);
 
-    void onFormResubmission(WebView webView, android.os.Message message, android.os.Message message1);
+    boolean onFormResubmission(WebView webView, android.os.Message message, android.os.Message message1);
 
-    void onReceivedHttpAuthRequest(WebView webView, HttpAuthHandler httpAuthHandler, String s, String s1);
+    boolean onReceivedHttpAuthRequest(WebView webView, HttpAuthHandler httpAuthHandler, String s, String s1);
 
-    void onReceivedSslError(WebView webView, SslErrorHandler sslErrorHandler, SslError sslError);
+    boolean onReceivedSslError(WebView webView, SslErrorHandler sslErrorHandler, SslError sslError);
 
-    void onReceivedClientCertRequest(WebView webView, ClientCertRequest clientCertRequest);
+    boolean onReceivedClientCertRequest(WebView webView, ClientCertRequest clientCertRequest);
 
     void onScaleChanged(WebView webView, float v, float v1);
 

@@ -88,8 +88,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onPageFinished(WebView view, String url) {
-        super.onPageFinished(view, url);
-
         //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
         if (BridgeConfig.toLoadJs != null && !url.contains("about:blank") && !isRedirected) {
             BridgeUtil.webViewLoadLocalJs(view, BridgeConfig.toLoadJs, BridgeConfig.defaultJs, BridgeConfig.customJs);
@@ -109,7 +107,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-        super.onReceivedError(view, errorCode, description, failingUrl);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onReceivedError(view, errorCode, description, failingUrl);
         }
@@ -117,7 +114,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onLoadResource(WebView webView, String s) {
-        super.onLoadResource(webView, s);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onLoadResource(webView, s);
         }
@@ -125,7 +121,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onReceivedHttpError(WebView webView, WebResourceRequest webResourceRequest, WebResourceResponse webResourceResponse) {
-        super.onReceivedHttpError(webView, webResourceRequest, webResourceResponse);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onReceivedHttpError(webView, webResourceRequest, webResourceResponse);
         }
@@ -160,7 +155,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void doUpdateVisitedHistory(WebView webView, String s, boolean b) {
-        super.doUpdateVisitedHistory(webView, s, b);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.doUpdateVisitedHistory(webView, s, b);
         }
@@ -168,39 +162,50 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onFormResubmission(WebView webView, android.os.Message message, android.os.Message message1) {
-        super.onFormResubmission(webView, message, message1);
+        boolean interrupt = false;
         if (bridgeWebViewClientListener != null) {
-            bridgeWebViewClientListener.onFormResubmission(webView, message, message1);
+            interrupt = bridgeWebViewClientListener.onFormResubmission(webView, message, message1);
+        }
+        if (!interrupt) {
+            super.onFormResubmission(webView, message, message1);
         }
     }
 
     @Override
     public void onReceivedHttpAuthRequest(WebView webView, HttpAuthHandler httpAuthHandler, String s, String s1) {
-        super.onReceivedHttpAuthRequest(webView, httpAuthHandler, s, s1);
+        boolean interrupt = false;
         if (bridgeWebViewClientListener != null) {
-            bridgeWebViewClientListener.onReceivedHttpAuthRequest(webView, httpAuthHandler, s, s1);
+            interrupt = bridgeWebViewClientListener.onReceivedHttpAuthRequest(webView, httpAuthHandler, s, s1);
+        }
+        if (!interrupt) {
+            super.onReceivedHttpAuthRequest(webView, httpAuthHandler, s, s1);
         }
     }
 
     @Override
     public void onReceivedSslError(WebView webView, SslErrorHandler sslErrorHandler, SslError sslError) {
-        super.onReceivedSslError(webView, sslErrorHandler, sslError);
+        boolean interrupt = false;
         if (bridgeWebViewClientListener != null) {
-            bridgeWebViewClientListener.onReceivedSslError(webView, sslErrorHandler, sslError);
+            interrupt = bridgeWebViewClientListener.onReceivedSslError(webView, sslErrorHandler, sslError);
+        }
+        if (!interrupt) {
+            super.onReceivedSslError(webView, sslErrorHandler, sslError);
         }
     }
 
     @Override
     public void onReceivedClientCertRequest(WebView webView, ClientCertRequest clientCertRequest) {
-        super.onReceivedClientCertRequest(webView, clientCertRequest);
+        boolean interrupt = false;
         if (bridgeWebViewClientListener != null) {
-            bridgeWebViewClientListener.onReceivedClientCertRequest(webView, clientCertRequest);
+            interrupt = bridgeWebViewClientListener.onReceivedClientCertRequest(webView, clientCertRequest);
+        }
+        if (!interrupt) {
+            super.onReceivedClientCertRequest(webView, clientCertRequest);
         }
     }
 
     @Override
     public void onScaleChanged(WebView webView, float v, float v1) {
-        super.onScaleChanged(webView, v, v1);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onScaleChanged(webView, v, v1);
         }
@@ -208,7 +213,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onUnhandledKeyEvent(WebView webView, KeyEvent keyEvent) {
-        super.onUnhandledKeyEvent(webView, keyEvent);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onUnhandledKeyEvent(webView, keyEvent);
         }
@@ -225,7 +229,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onTooManyRedirects(WebView webView, android.os.Message message, android.os.Message message1) {
-        super.onTooManyRedirects(webView, message, message1);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onTooManyRedirects(webView, message, message1);
         }
@@ -233,7 +236,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onReceivedLoginRequest(WebView webView, String s, String s1, String s2) {
-        super.onReceivedLoginRequest(webView, s, s1, s2);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onReceivedLoginRequest(webView, s, s1, s2);
         }
@@ -241,7 +243,6 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onDetectedBlankScreen(String s, int i) {
-        super.onDetectedBlankScreen(s, i);
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onDetectedBlankScreen(s, i);
         }

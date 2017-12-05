@@ -27,7 +27,6 @@ public class SimpleBridgeWebViewClientListener implements BridgeWebViewClientLis
 
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
-
     }
 
     @Override
@@ -71,23 +70,23 @@ public class SimpleBridgeWebViewClientListener implements BridgeWebViewClientLis
     }
 
     @Override
-    public void onFormResubmission(WebView webView, Message message, Message message1) {
-
+    public boolean onFormResubmission(WebView webView, Message message, Message message1) {
+        return false;
     }
 
     @Override
-    public void onReceivedHttpAuthRequest(WebView webView, HttpAuthHandler httpAuthHandler, String s, String s1) {
-
+    public boolean onReceivedHttpAuthRequest(WebView webView, HttpAuthHandler httpAuthHandler, String s, String s1) {
+        return false;
     }
 
     @Override
-    public void onReceivedSslError(WebView webView, SslErrorHandler sslErrorHandler, SslError sslError) {
-
+    public boolean onReceivedSslError(WebView webView, SslErrorHandler sslErrorHandler, SslError sslError) {
+        return false;
     }
 
     @Override
-    public void onReceivedClientCertRequest(WebView webView, ClientCertRequest clientCertRequest) {
-
+    public boolean onReceivedClientCertRequest(WebView webView, ClientCertRequest clientCertRequest) {
+        return false;
     }
 
     @Override
