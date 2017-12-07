@@ -16,7 +16,7 @@
 <dependency>
   <groupId>com.hjhrq1991.library</groupId>
   <artifactId>jsbridge</artifactId>
-  <version>1.0.7</version>
+  <version>1.1.0</version>
   <type>pom</type>
 </dependency>
 ```
@@ -24,7 +24,7 @@
 添加gradle依赖
 
 ```gradle
-compile 'com.hjhrq1991.library:jsbridge:1.0.7'
+compile 'com.hjhrq1991.library:jsbridge:1.1.0'
 ```
 
 在你的布局上添加BridgeWebView
@@ -150,6 +150,128 @@ bridge.registerHandler("click1", function(data, responseCallback) {
 window.cmbMerchantBridge = cmbMerchantBridge;
 ```
 
+### setWebViewClient
+Js桥的处理在WebViewClient里进行，因此使用setWebViewClient()方法会导致Js桥失效
+因此提供新的API方法进行回调
+
+```java
+        webView.setBridgeWebViewClientListener(new SimpleBridgeWebViewClientListener() {
+        
+        });
+
+```
+当然你也可以直接new BridgeWebViewClientListener()
+
+```java
+        webView.setBridgeWebViewClientListener(new BridgeWebViewClientListener() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return false;
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                return null;
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                return null;
+            }
+
+            @Override
+            public boolean onTooManyRedirects(WebView view, Message cancelMsg, Message continueMsg) {
+                return false;
+            }
+
+            @Override
+            public boolean onFormResubmission(WebView view, Message dontResend, Message resend) {
+                return false;
+            }
+
+            @Override
+            public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+
+            }
+
+            @Override
+            public boolean onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                return false;
+            }
+
+            @Override
+            public boolean onReceivedClientCertRequest(WebView view, ClientCertRequest request) {
+                return false;
+            }
+
+            @Override
+            public boolean onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
+                return false;
+            }
+
+            @Override
+            public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event) {
+                return false;
+            }
+
+            @Override
+            public boolean onUnhandledKeyEvent(WebView view, KeyEvent event) {
+                return false;
+            }
+
+            @Override
+            public void onScaleChanged(WebView view, float oldScale, float newScale) {
+
+            }
+
+            @Override
+            public void onReceivedLoginRequest(WebView view, String realm, String account, String args) {
+
+            }
+
+            @Override
+            public void onPageCommitVisible(WebView view, String url) {
+
+            }
+
+            @Override
+            public boolean onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                return false;
+            }
+
+            @Override
+            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+
+            }
+        });
+
+```
+
 ### 二、TbsBridgeWebView
 
 TbsBridgeWebView基于Tbs(腾讯浏览服务)X5内核，结合JsBridge的自定义WebView。
@@ -166,7 +288,7 @@ TbsBridgeWebView基于Tbs(腾讯浏览服务)X5内核，结合JsBridge的自定�
 <dependency>
 <groupId>com.hjhrq1991.library.tbs</groupId>
 <artifactId>tbsjsbridge</artifactId>
-<version>1.0.2</version>
+<version>1.0.7</version>
 <type>pom</type>
 </dependency>
 ```
@@ -174,7 +296,7 @@ TbsBridgeWebView基于Tbs(腾讯浏览服务)X5内核，结合JsBridge的自定�
 添加gradle依赖
 
 ```gradle
-compile 'com.hjhrq1991.library.tbs:tbsjsbridge:1.0.2'
+compile 'com.hjhrq1991.library.tbs:tbsjsbridge:1.0.7'
 ```
 
 添加权限
