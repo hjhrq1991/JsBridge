@@ -1,4 +1,8 @@
-apply plugin: 'com.android.library'
+plugins {
+    id 'com.android.library'
+//    id 'maven-publish'
+//    id 'com.novoda.bintray-release'
+}
 
 version = "1.0.7"
 
@@ -26,18 +30,17 @@ android {
 }
 
 dependencies {
-    compile files('libs/tbs_sdk_thirdapp_v2.2.0.1055_36542_sharewithoutdownload_withoutGame_obfs_20160816_120907.jar')
+    api files('libs/tbs_sdk_thirdapp_v2.2.0.1055_36542_sharewithoutdownload_withoutGame_obfs_20160816_120907.jar')
 }
 
-apply plugin: 'com.novoda.bintray-release'
-publish {
-    def Properties localProps = new Properties()
-    localProps.load(new FileInputStream(file('../gradle.properties')))
-
-    userOrg = localProps.USERORG
-    groupId = localProps.X5_GROUPID
-    artifactId = localProps.X5_ARTIFACTID
-    publishVersion = localProps.X5_PUBLISHVERSION
-    desc = localProps.DESC
-    website = localProps.WEBSITE
-}
+//publish {
+//    def Properties localProps = new Properties()
+//    localProps.load(new FileInputStream(file('../gradle.properties')))
+//
+//    userOrg = localProps.USERORG
+//    groupId = localProps.X5_GROUPID
+//    artifactId = localProps.X5_ARTIFACTID
+//    publishVersion = localProps.X5_PUBLISHVERSION
+//    desc = localProps.DESC
+//    website = localProps.WEBSITE
+//}

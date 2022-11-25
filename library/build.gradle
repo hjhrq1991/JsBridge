@@ -1,5 +1,7 @@
-apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
 
 def group = 'com.github.hjhrq1991'
 def libraryVersion = '1.1.1'
