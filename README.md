@@ -1,3 +1,23 @@
+[![](https://jitpack.io/v/hjhrq1991/JsBridge.svg)](https://jitpack.io/#hjhrq1991/JsBridge)
+JsBridge库现已迁移至Jitpack，具体使用如下：
+1.工程根build.gradle添加jitpack
+```gradle
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+2.模块build.gradle添加依赖
+```gradle
+dependencies {
+    implementation 'com.github.hjhrq1991:JsBridge:1.1.1'
+}
+```
+
+
 本项目共有两个部分：
 1.基于系统的JsBridge；
 2.基于Tbs X5内核的JsBridge；
