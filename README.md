@@ -1,4 +1,5 @@
 [![](https://jitpack.io/v/hjhrq1991/JsBridge.svg)](https://jitpack.io/#hjhrq1991/JsBridge)
+<br>
 JsBridge库现已迁移至Jitpack，具体使用如下：
 1.工程根build.gradle添加jitpack
 ```gradle
@@ -16,7 +17,7 @@ dependencies {
     implementation 'com.github.hjhrq1991:JsBridge:1.1.1'
 }
 ```
-
+<br>
 
 本项目共有两个部分：
 1.基于系统的JsBridge；
