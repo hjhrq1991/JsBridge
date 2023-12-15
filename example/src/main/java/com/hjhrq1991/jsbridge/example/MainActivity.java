@@ -48,7 +48,6 @@ public class MainActivity extends Activity implements OnClickListener {
         //=======================使用时请替换成自己url==========================
 //        url = "file:///android_asset/demo2.html";
         url = "file:///android_asset/testJavascriptBridge.html";
-
         initView();
     }
 
@@ -177,58 +176,46 @@ public class MainActivity extends Activity implements OnClickListener {
         webView.loadUrl(url);
 
         //description：如需使用自定义桥名，调用以下方法即可，
-        // 传空或不调用setCustom方法即使用默认桥名。
+        // 传空或不调用setBridge方法即使用默认桥名。
         // 默认桥名：WebViewJavascriptBridge
         //=======================使用自定义桥名时调用以下代码即可==========================
-//        webView.setCustom("桥名");
-        webView.setCustom("TestJavascriptBridge");
+//        webView.setBridge("桥名");
+        webView.setBridge("WebBridge", "TestJavascriptBridge");
 
-        //=======================以下4个web调用native示例方法==========================
-        webView.registerHandler("initSignNetPay", new BridgeHandler() {
+        //=======================以下web调用app示例方法==========================
+        webView.registerHandler("jsClick1", new BridgeHandler() {
             @Override
             public void handler(String data, CallBackFunction function) {
-                Log.i(TAG, "回传结果：" + data);
+                Log.i(TAG, "console  jsClick1  回传结果：" + data);
                 Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
             }
         });
 
-        webView.registerHandler("initSignNetShare", new BridgeHandler() {
-
+        webView.registerHandler("jsClick2", new BridgeHandler() {
             @Override
             public void handler(String data, CallBackFunction function) {
-                Log.i(TAG, "回传结果：" + data);
+                Log.i(TAG, "console  jsClick2  回传结果：" + data);
                 Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
             }
         });
 
-        webView.registerHandler("jsHandler1", new BridgeHandler() {
+        webView.registerHandler("jsCall1", new BridgeHandler() {
 
             @Override
             public void handler(String data, CallBackFunction function) {
-                Log.i(TAG, "回传结果：" + data);
+                Log.i(TAG, "console   jsCall1  回传结果：" + data);
                 if (btn1 != null)
                     btn1.setVisibility(View.VISIBLE);
             }
         });
 
-        webView.registerHandler("jsHandler2", new BridgeHandler() {
+        webView.registerHandler("jsCall2", new BridgeHandler() {
 
             @Override
             public void handler(String data, CallBackFunction function) {
                 Log.i(TAG, "回传结果：" + data);
                 if (btn2 != null)
                     btn2.setVisibility(View.VISIBLE);
-            }
-        });
-
-
-        //=======================招行一网通js桥回调==========================
-        webView.registerHandler("initCmbSignNetPay", new BridgeHandler() {
-
-            @Override
-            public void handler(String data, CallBackFunction function) {
-                //在这里解析回调数据并执行处理
-                Log.i(TAG, "回传结果：" + data);
             }
         });
     }
@@ -243,35 +230,34 @@ public class MainActivity extends Activity implements OnClickListener {
                     finish();
                 break;
             case R.id.btn1:
-                //=======================这里是native调用web==========================
-                webView.callHandler("click1", "pic", new CallBackFunction() {
+                //=======================这里是app调用web==========================
+                webView.callHandler("appClick1", "pic", new CallBackFunction() {
                     @Override
                     public void onCallBack(String data) {
-                        Log.i(TAG, "回传结果：" + data);
+                        Log.i(TAG, "console   appClick1   回传结果：" + data);
                         Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
                     }
                 });
                 break;
             case R.id.btn2:
-                //=======================这里是native调用web==========================
-                webView.callHandler("click2", "success", new CallBackFunction() {
+                //=======================这里是app调用web==========================
+                webView.callHandler("appClick2", "success", new CallBackFunction() {
                     @Override
                     public void onCallBack(String data) {
-                        Log.i(TAG, "回传结果：" + data);
+                        Log.i(TAG, "console   appClick2   回传结果：" + data);
                         Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
                     }
                 });
                 break;
             case R.id.btn3:
-                //=======================这里是native调用web==========================
-                webView.callHandler("click3", "success", new CallBackFunction() {
+                //=======================这里是app调用web==========================
+                webView.callHandler("appClick3", "success", new CallBackFunction() {
                     @Override
                     public void onCallBack(String data) {
                         Log.i(TAG, "回传结果：" + data);
                         Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
                     }
                 });
-
                 break;
         }
     }

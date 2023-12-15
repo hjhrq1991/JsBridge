@@ -2,6 +2,7 @@ package com.hjhrq1991.library;
 
 import android.graphics.Bitmap;
 import android.net.http.SslError;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
@@ -90,9 +91,11 @@ public class BridgeWebViewClient extends WebViewClient {
         }
 
         if (url.startsWith(BridgeUtil.YY_RETURN_DATA)) { // 如果是返回数据
+            Log.i("BridgeWebViewClient",  "console   url.startsWith(BridgeUtil.YY_RETURN_DATA");
             webView.handlerReturnData(url);
             return true;
         } else if (url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) { //
+            Log.i("BridgeWebViewClient",  "console   url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA");
             webView.flushMessageQueue();
             return true;
         } else {
@@ -119,7 +122,10 @@ public class BridgeWebViewClient extends WebViewClient {
     public void onPageFinished(WebView view, String url) {
         //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
         if (BridgeConfig.toLoadJs != null && !url.contains("about:blank") && !isRedirected) {
-            BridgeUtil.webViewLoadLocalJs(view, BridgeConfig.toLoadJs, BridgeConfig.defaultJs, BridgeConfig.customJs);
+            for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
+                String bridgeName = BridgeConfig.customBridge.get(i);
+                BridgeUtil.webViewLoadLocalJs(view, BridgeConfig.toLoadJs, BridgeConfig.defaultBridge, bridgeName);
+            }
         }
 
         if (webView.getStartupMessage() != null) {
@@ -151,7 +157,10 @@ public class BridgeWebViewClient extends WebViewClient {
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
         if (bridgeWebViewClientListener != null) {
-            return bridgeWebViewClientListener.shouldInterceptRequest(view, url);
+            WebResourceResponse response = bridgeWebViewClientListener.shouldInterceptRequest(view, url);
+            if (response != null) {
+                return response;
+            } else return super.shouldInterceptRequest(view, url);
         } else {
             return super.shouldInterceptRequest(view, url);
         }
@@ -160,7 +169,10 @@ public class BridgeWebViewClient extends WebViewClient {
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
         if (bridgeWebViewClientListener != null) {
-            return bridgeWebViewClientListener.shouldInterceptRequest(view, request);
+            WebResourceResponse response = bridgeWebViewClientListener.shouldInterceptRequest(view, request);
+            if (response != null) {
+                return response;
+            } else return super.shouldInterceptRequest(view, request);
         } else {
             return super.shouldInterceptRequest(view, request);
         }

@@ -1,5 +1,8 @@
 package com.hjhrq1991.library;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author hjhrq1991 created at 8/22/16 14 41.
  * 配置文件
@@ -10,9 +13,9 @@ public class BridgeConfig {
     /**
      * 默认桥名
      */
-    public static final String defaultJs = "WebViewJavascriptBridge";
+    public static final String defaultBridge = "WebViewJavascriptBridge";
     /**
      * 自定义桥名
      */
-    public static String customJs = BridgeConfig.defaultJs;
+    public static List<String> customBridge = Collections.singletonList(defaultBridge);
 }

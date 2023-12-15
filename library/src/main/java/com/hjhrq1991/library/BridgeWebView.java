@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.GeolocationPermissions;
@@ -21,6 +22,8 @@ import android.webkit.WebStorage;
 import android.webkit.WebView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -135,79 +138,107 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         //escape special characters for json string
         messageJson = messageJson.replaceAll("(\\\\)([^utrn])", "\\\\\\\\$1$2");
         messageJson = messageJson.replaceAll("(?<=[^\\\\])(\")", "\\\\\"");
-        String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultJs, BridgeConfig.customJs), messageJson);
-        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-            this.loadUrl(javascriptCommand);
+
+        for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
+            String bridgeName = BridgeConfig.customBridge.get(i);
+            String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), messageJson);
+            if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+                Log.i(TAG, bridgeName + "   console   dispatchMessage：" + javascriptCommand);
+                this.loadUrl(javascriptCommand);
+            }
         }
     }
 
     public void flushMessageQueue() {
         if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-            loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA.replace(BridgeConfig.defaultJs, BridgeConfig.customJs), new CallBackFunction() {
+            for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
+                String bridgeName = BridgeConfig.customBridge.get(i);
+                flushMessageQueue(bridgeName);
+            }
+        }
+    }
 
-                @Override
-                public void onCallBack(String data) {
-                    // deserializeMessage
-                    List<Message> list = null;
-                    try {
-                        list = Message.toArrayList(data);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                    if (list == null || list.size() == 0) {
-                        return;
-                    }
-                    for (int i = 0; i < list.size(); i++) {
-                        Message m = list.get(i);
-                        String responseId = m.getResponseId();
-                        // 是否是response
-                        if (!TextUtils.isEmpty(responseId)) {
-                            CallBackFunction function = responseCallbacks.get(responseId);
-                            String responseData = m.getResponseData();
-                            function.onCallBack(responseData);
-                            responseCallbacks.remove(responseId);
+    private void flushMessageQueue(String bridgeName) {
+        Log.i(TAG, bridgeName + "   console  执行 flushMessageQueue");
+        loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), new CallBackFunction() {
+            @Override
+            public void onCallBack(String data) {
+                Log.i(TAG, bridgeName + "   console   flushMessageQueue.onCallBack：" + data);
+                // deserializeMessage
+                List<Message> list = null;
+                try {
+                    list = Message.toArrayList(data);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return;
+                }
+                if (list == null || list.size() == 0) {
+                    return;
+                }
+                for (int i = 0; i < list.size(); i++) {
+                    Message m = list.get(i);
+                    String responseId = m.getResponseId();
+                    // 是否是response
+                    if (!TextUtils.isEmpty(responseId)) {
+                        CallBackFunction function = responseCallbacks.get(responseId);
+                        String responseData = m.getResponseData();
+                        function.onCallBack(responseData);
+                        responseCallbacks.remove(responseId);
+
+                        Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId不为空");
+                    } else {
+                        Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId为空");
+                        CallBackFunction responseFunction = null;
+                        // if had callbackId
+                        final String callbackId = m.getCallbackId();
+                        if (!TextUtils.isEmpty(callbackId)) {
+                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId不为空");
+                            responseFunction = new CallBackFunction() {
+                                @Override
+                                public void onCallBack(String data) {
+
+                                    Message responseMsg = new Message();
+                                    responseMsg.setResponseId(callbackId);
+                                    responseMsg.setResponseData(data);
+                                    queueMessage(responseMsg);
+                                }
+                            };
                         } else {
-                            CallBackFunction responseFunction = null;
-                            // if had callbackId
-                            final String callbackId = m.getCallbackId();
-                            if (!TextUtils.isEmpty(callbackId)) {
-                                responseFunction = new CallBackFunction() {
-                                    @Override
-                                    public void onCallBack(String data) {
-                                        Message responseMsg = new Message();
-                                        responseMsg.setResponseId(callbackId);
-                                        responseMsg.setResponseData(data);
-                                        queueMessage(responseMsg);
-                                    }
-                                };
-                            } else {
-                                responseFunction = new CallBackFunction() {
-                                    @Override
-                                    public void onCallBack(String data) {
-                                        // do nothing
-                                    }
-                                };
-                            }
-                            BridgeHandler handler;
-                            if (!TextUtils.isEmpty(m.getHandlerName())) {
-                                handler = messageHandlers.get(m.getHandlerName());
-                            } else {
-                                handler = defaultHandler;
-                            }
-                            if (handler != null) {
-                                handler.handler(m.getData(), responseFunction);
-                            }
+                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId为空");
+                            responseFunction = new CallBackFunction() {
+                                @Override
+                                public void onCallBack(String data) {
+                                    // do nothing
+                                }
+                            };
+                        }
+                        BridgeHandler handler;
+                        if (!TextUtils.isEmpty(m.getHandlerName())) {
+                            handler = messageHandlers.get(m.getHandlerName());
+                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName："+m.getHandlerName());
+                        } else {
+                            handler = defaultHandler;
+                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName：为空");
+                        }
+
+                        if (handler != null) {
+                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler不为空，回调数据");
+                            handler.handler(m.getData(), responseFunction);
+                        } else {
+                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler为空");
                         }
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     public void loadUrl(String jsUrl, CallBackFunction returnCallback) {
         this.loadUrl(jsUrl);
-        responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl, BridgeConfig.customJs), returnCallback);
+        for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
+            String bridgeName = BridgeConfig.customBridge.get(i);
+            responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl, bridgeName), returnCallback);
+        }
     }
 
     /**
@@ -483,12 +514,15 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     /**
-     * @param customJs 自定义桥名，可为空，为空时使用默认桥名
-     *                 自定义桥名回调，如用自定义桥名，请copy一份WebViewJavascriptBridge.js替换文件名
-     *                 及脚本内所有包含"WebViewJavascriptBridge"的内容为你的自定义桥名
+     * @param bridgeName 自定义桥名，可为空，为空时使用默认桥名，默认桥名为 [BridgeConfig.defaultBridge] WebViewJavascriptBridge
+     *                   自定义桥名时，会动态替换 WebViewJavascriptBridge.js 文件内 WebViewJavascriptBridge 字段
      * @author hjhrq1991 created at 6/20/16 17:32.
      */
-    public void setCustom(String customJs) {
-        BridgeConfig.customJs = !TextUtils.isEmpty(customJs) ? customJs : BridgeConfig.defaultJs;
+    public void setBridge(String... bridgeName) {
+        if (bridgeName.length > 0) {
+            BridgeConfig.customBridge = Arrays.asList(bridgeName);
+        } else {
+            BridgeConfig.customBridge = Collections.singletonList(BridgeConfig.defaultBridge);
+        }
     }
 }

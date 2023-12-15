@@ -8,22 +8,21 @@
 <body onload="JsHandler()">
 <script type="text/javascript" src="/res/common/js/jquery.js"></script>
 <p>
-    <input type="button" id="enter" value="我是按钮1" onclick="click1();"
+    <input type="button" id="enter" value="我是按钮1" onclick="jsClick1();"
     />
-    <input type="button" id="enter" value="我是按钮2" onclick="click2();"
+    <input type="button" id="enter" value="我是按钮2" onclick="jsClick2();"
     />
 </p><br/>
 <p>
     <a href=demo3.html>跳转</a>
 </p>
 <script>
-
-
     var default_data = {
         error: "1"
     };
 
-    var connectMerchantJSBridge = function (callback) {
+    //桥方法
+    var jsBridge = function (callback) {
         try {
             if (window.TestJavascriptBridge) {
                 callback(TestJavascriptBridge);
@@ -35,84 +34,85 @@
         } catch (ex) { }
     };
 
-    var cmbMerchantBridge = {
-        initSignNet: function (payData,name) {
-            if (!payData) {
-                payData = default_data;
+    /*
+     * JS 调用app native方法
+     *
+     * @param nativeCallName 请求nativeCallName
+     * @param data 数据实体
+     */
+    var bridge = {
+        callApp: function (name, data) {
+            if (!data) {
+                data = default_data;
             }
-            connectMerchantJSBridge(function (bridge) {
+            jsBridge(function (bridge) {
                 if (typeof bridge === "undefined") {
                     return;
                 }
-                bridge.callHandler(name, JSON.stringify(payData));
+                bridge.callHandler(name, JSON.stringify(data));
             });
         },
     };
 
-    /*app native调用本页面方法*/
-    connectMerchantJSBridge(function(bridge) {
+    /* app native调用本页面方法 */
+    jsBridge(function(bridge) {
+        //初始化
         bridge.init(function(message, responseCallback) {
 
         });
 
-        bridge.registerHandler("click1", function(data, responseCallback) {
+        //注册桥方法1
+        bridge.registerHandler("appClick1", function(data, responseCallback) {
             responseCallback("receive click1");
             /*弹窗*/
             dialog();
         });
 
-        bridge.registerHandler("click2", function(data, responseCallback) {
+        //注册桥方法2
+        bridge.registerHandler("appClick2", function(data, responseCallback) {
             responseCallback("receive click2");
         });
 
-         bridge.registerHandler("click3", function(data, responseCallback) {
+        //注册桥方法3
+        bridge.registerHandler("appClick3", function(data, responseCallback) {
             responseCallback("receive click3");
         });
     })
 
-
-    window.cmbMerchantBridge = cmbMerchantBridge;
-
-    function click1()
-    {
-        var objData = new datas();
-        var payData = objData.click1;
-            try {
-                cmbMerchantBridge.initSignNet(payData, "initSignNetPay");
-            } catch (ex) { }
+    //JS点击方法
+    function jsClick1() {
+        var data = new Data().click1;
+        try {
+            bridge.callApp("jsClick1", data);
+        } catch (ex) { }
     }
 
-    function click2(){
-        var objData = new datas();
-        var shareData = objData.click2;
-
+    //JS点击方法
+    function jsClick2() {
+        var data = new Data().click2;
         try {
-            cmbMerchantBridge.initSignNet(shareData, "initSignNetShare");
+            bridge.callApp("jsClick2", data);
         } catch (ex) { }
     }
 
 
-
     /*弹窗*/
-    function dialog()
-    {
-        click2();
+    function dialog(){
+        jsClick2();
     }
 
-    <!-- 这个是本地测试方法，实际使用使用以上两个方法 -->
+    <!-- 测试方法 -->
     function JsHandler(){
-     var objData = new datas();
+     var objData = new Data();
         var handlerData = objData.handlerData;
-        cmbMerchantBridge.initSignNet(handlerData, "jsHandler1");
+        bridge.callApp("jsCall1", handlerData);
 
-        cmbMerchantBridge.initSignNet(handlerData, "jsHandler2");
+        bridge.callApp("jsCall2", handlerData);
     }
 
 
-
-    function datas()
-    {
-
+    //数据实体
+    function Data() {
         this.click1 = {
             title: "hello title",
         };
