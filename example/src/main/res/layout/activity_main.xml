@@ -21,7 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="48dp"
             android:layout_alignParentRight="true"
-            android:text="调用js桥1"
+            android:text="app调用js桥1"
             android:visibility="gone" />
 
         <Button
@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="48dp"
             android:layout_toLeftOf="@+id/btn1"
-            android:text="调用js桥2"
+            android:text="app调用js桥2"
             android:visibility="gone" />
 
     </RelativeLayout>
