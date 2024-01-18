@@ -2,7 +2,6 @@ package com.hjhrq1991.library;
 
 import android.graphics.Bitmap;
 import android.net.http.SslError;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
@@ -91,11 +90,9 @@ public class BridgeWebViewClient extends WebViewClient {
         }
 
         if (url.startsWith(BridgeUtil.YY_RETURN_DATA)) { // 如果是返回数据
-            Log.i("BridgeWebViewClient",  "console   url.startsWith(BridgeUtil.YY_RETURN_DATA");
             webView.handlerReturnData(url);
             return true;
         } else if (url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) { //
-            Log.i("BridgeWebViewClient",  "console   url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA");
             webView.flushMessageQueue();
             return true;
         } else {

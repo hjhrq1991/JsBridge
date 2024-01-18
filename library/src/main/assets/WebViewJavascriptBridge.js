@@ -2,9 +2,7 @@
 //since comments will cause error when use in webview.loadurl,
 //comments will be remove by java use regexp
 (function() {
-    if (window.WebViewJavascriptBridge) {
-        return;
-    }
+    if (window.WebViewJavascriptBridge) { return; }
 
     var messagingIframe;
     var sendMessageQueue = [];
@@ -25,6 +23,7 @@
 
     //set default messageHandler
     function init(messageHandler) {
+        isBridgeInit = true;
         if (WebViewJavascriptBridge._messageHandler) {
             throw new Error('WebViewJavascriptBridge.init called twice');
         }
@@ -67,7 +66,9 @@
 
     // 提供给native调用,该函数作用:获取sendMessageQueue返回给native,由于android不能直接获取返回的内容,所以使用url shouldOverrideUrlLoading 的方式返回内容
     function _fetchQueue() {
+        if (isBridgeInit == false) { return; }
         var messageQueueString = JSON.stringify(sendMessageQueue);
+
         sendMessageQueue = [];
         //android can't read directly the return data, so we can reload iframe src to communicate with java
         messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://return/_fetchQueue/' + encodeURIComponent(messageQueueString);
@@ -114,9 +115,10 @@
         });
     }
 
-    //提供给native调用,receiveMessageQueue 在会在页面加载完后赋值为null,所以
+    //App调用JS并发送数据
     function _handleMessageFromNative(messageJSON) {
-        console.log(messageJSON);
+        if (isBridgeInit == false) { return; }
+//        console.log(messageJSON);
         if (receiveMessageQueue) {
             receiveMessageQueue.push(messageJSON);
         } else {
@@ -133,6 +135,8 @@
         _handleMessageFromNative: _handleMessageFromNative
     };
 
+    //桥是否初始化
+    var isBridgeInit = false;
     var doc = document;
     _createQueueReadyIframe(doc);
     var readyEvent = doc.createEvent('Events');

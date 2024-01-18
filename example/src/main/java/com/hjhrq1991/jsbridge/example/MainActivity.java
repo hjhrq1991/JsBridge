@@ -84,13 +84,11 @@ public class MainActivity extends Activity implements OnClickListener {
         webView.setBridgeWebViewClientListener(new SimpleBridgeWebViewClientListener() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                Log.i(TAG, "超链接：" + url);
                 return false;
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                Log.i(TAG, "超链接：" + url);
                 return false;
             }
 
@@ -180,7 +178,7 @@ public class MainActivity extends Activity implements OnClickListener {
         // 默认桥名：WebViewJavascriptBridge
         //=======================使用自定义桥名时调用以下代码即可==========================
 //        webView.setBridge("桥名");
-        webView.setBridge("WebBridge", "TestJavascriptBridge");
+        webView.setBridge("WebBridge", "TestJavascriptBridge", "AppBridge");
 
         //=======================以下web调用app示例方法==========================
         webView.registerHandler("jsClick1", new BridgeHandler() {
@@ -200,7 +198,6 @@ public class MainActivity extends Activity implements OnClickListener {
         });
 
         webView.registerHandler("jsCall1", new BridgeHandler() {
-
             @Override
             public void handler(String data, CallBackFunction function) {
                 Log.i(TAG, "console   jsCall1  回传结果：" + data);
@@ -210,12 +207,21 @@ public class MainActivity extends Activity implements OnClickListener {
         });
 
         webView.registerHandler("jsCall2", new BridgeHandler() {
-
             @Override
             public void handler(String data, CallBackFunction function) {
                 Log.i(TAG, "回传结果：" + data);
                 if (btn2 != null)
                     btn2.setVisibility(View.VISIBLE);
+            }
+        });
+
+
+        //AppBridge桥的方法
+        webView.registerHandler("jsBridge2Click", new BridgeHandler() {
+            @Override
+            public void handler(String data, CallBackFunction function) {
+                Log.i(TAG, "console  该桥未初始化，不执行发送消息到 桥2也收到消息了  回传结果：" + data);
+                Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -232,6 +238,13 @@ public class MainActivity extends Activity implements OnClickListener {
             case R.id.btn1:
                 //=======================这里是app调用web==========================
                 webView.callHandler("appClick1", "pic", new CallBackFunction() {
+                    @Override
+                    public void onCallBack(String data) {
+                        Log.i(TAG, "console   appClick1   回传结果：" + data);
+                        Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                webView.callHandler("AppBridgeClick1", "pic", new CallBackFunction() {
                     @Override
                     public void onCallBack(String data) {
                         Log.i(TAG, "console   appClick1   回传结果：" + data);

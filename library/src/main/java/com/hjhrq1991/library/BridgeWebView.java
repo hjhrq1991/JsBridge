@@ -33,6 +33,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     private final String TAG = "BridgeWebView";
 
+    private boolean isDebug = false;
     private BridgeWebViewClient bridgeWebViewClient;
 
     Map<String, CallBackFunction> responseCallbacks = new HashMap<String, CallBackFunction>();
@@ -50,6 +51,14 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     private long uniqueId = 0;
+
+    public boolean isDebug() {
+        return isDebug;
+    }
+
+    public void setDebug(boolean debug) {
+        isDebug = debug;
+    }
 
     public BridgeWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -88,11 +97,14 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         return bridgeWebViewClient = new BridgeWebViewClient(this);
     }
 
+    // url：yy://return/_fetchQueue/[{"handlerName":"jsClick1","data":"{\"title\":\"hello title\"}"}]
     public void handlerReturnData(String url) {
+        if (url.endsWith("[]")) return; //当以[]结尾时表示handlerName也没有，则该情况丢弃
         String functionName = BridgeUtil.getFunctionFromReturnUrl(url);
         CallBackFunction f = responseCallbacks.get(functionName);
         String data = BridgeUtil.getDataFromReturnUrl(url);
         if (f != null) {
+            //TODO 这里需处理remove导致无法继续发送其他桥的消息
             f.onCallBack(data);
             responseCallbacks.remove(functionName);
             return;
@@ -143,7 +155,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             String bridgeName = BridgeConfig.customBridge.get(i);
             String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), messageJson);
             if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-                Log.i(TAG, bridgeName + "   console   dispatchMessage：" + javascriptCommand);
+                if (isDebug) Log.i(TAG, bridgeName + "   console   dispatchMessage：" + javascriptCommand);
                 this.loadUrl(javascriptCommand);
             }
         }
@@ -159,11 +171,11 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     private void flushMessageQueue(String bridgeName) {
-        Log.i(TAG, bridgeName + "   console  执行 flushMessageQueue");
+        if (isDebug) Log.i(TAG, bridgeName + "   console  执行 flushMessageQueue");
         loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), new CallBackFunction() {
             @Override
             public void onCallBack(String data) {
-                Log.i(TAG, bridgeName + "   console   flushMessageQueue.onCallBack：" + data);
+                if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue.onCallBack：" + data);
                 // deserializeMessage
                 List<Message> list = null;
                 try {
@@ -185,14 +197,14 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                         function.onCallBack(responseData);
                         responseCallbacks.remove(responseId);
 
-                        Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId不为空");
+                        if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId不为空");
                     } else {
-                        Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId为空");
+                        if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId为空");
                         CallBackFunction responseFunction = null;
                         // if had callbackId
                         final String callbackId = m.getCallbackId();
                         if (!TextUtils.isEmpty(callbackId)) {
-                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId不为空");
+                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId不为空");
                             responseFunction = new CallBackFunction() {
                                 @Override
                                 public void onCallBack(String data) {
@@ -204,7 +216,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                                 }
                             };
                         } else {
-                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId为空");
+                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId为空");
                             responseFunction = new CallBackFunction() {
                                 @Override
                                 public void onCallBack(String data) {
@@ -215,17 +227,17 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                         BridgeHandler handler;
                         if (!TextUtils.isEmpty(m.getHandlerName())) {
                             handler = messageHandlers.get(m.getHandlerName());
-                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName："+m.getHandlerName());
+                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName："+m.getHandlerName());
                         } else {
                             handler = defaultHandler;
-                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName：为空");
+                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName：为空");
                         }
 
                         if (handler != null) {
-                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler不为空，回调数据");
+                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler不为空，回调数据");
                             handler.handler(m.getData(), responseFunction);
                         } else {
-                            Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler为空");
+                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler为空");
                         }
                     }
                 }
