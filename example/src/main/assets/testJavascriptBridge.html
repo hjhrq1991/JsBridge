@@ -5,12 +5,12 @@
     <meta name="viewport" content="initial-scale=1, user-scalable=0, minimal-ui">
     <title></title>
 </head>
-<body onload="JsHandler()">
+<body onload="finishLoadAndCall()">
 <script type="text/javascript" src="/res/common/js/jquery.js"></script>
 <p>
-    <input type="button" id="enter" value="我是按钮1" onclick="jsClick1();"
+    <input type="button" id="enter" value="js按钮1" onclick="jsClick1();"
     />
-    <input type="button" id="enter" value="我是按钮2" onclick="jsClick2();"
+    <input type="button" id="enter" value="js按钮2" onclick="jsClick2();"
     />
 </p><br/>
 <p>
@@ -64,8 +64,6 @@
         //注册桥方法1
         bridge.registerHandler("appClick1", function(data, responseCallback) {
             responseCallback("receive click1");
-            /*弹窗*/
-            dialog();
         });
 
         //注册桥方法2
@@ -79,11 +77,74 @@
         });
     })
 
+
+
+
+
+
+
+
+      //桥2测试
+    //桥方法
+    var jsBridge2 = function (callback) {
+        try {
+            if (window.AppBridge) {
+                callback(AppBridge);
+            } else {
+                document.addEventListener("AppBridgeReady", function () {
+                    callback(AppBridge);
+                }, false);
+            }
+        } catch (ex) { }
+    };
+
+    /*
+     * JS 调用app native方法
+     *
+     * @param nativeCallName 请求nativeCallName
+     * @param data 数据实体
+     */
+    var appBridge = {
+        callApp: function (name, data) {
+            if (!data) {
+                data = default_data;
+            }
+            jsBridge2(function (appBridge) {
+                if (typeof appBridge === "undefined") {
+                    console.log("JsBridge", "该桥未初始化，不执行发送消息到 undefined了" );
+                    return;
+                }
+                appBridge.callHandler(name, JSON.stringify(data));
+            });
+        },
+    };
+
+    /* app native调用本页面方法 */
+    jsBridge2(function(appBridge) {
+        //初始化
+        appBridge.init(function(message, responseCallback) {
+
+        });
+
+        //注册桥方法1
+        appBridge.registerHandler("AppBridgeClick1", function(data, responseCallback) {
+            console.log("JsBridge", "该桥未初始化，不执行发送消息到 桥2也收到消息了" );
+        });
+    })
+
+
+
+
+
+
+
     //JS点击方法
     function jsClick1() {
         var data = new Data().click1;
         try {
             bridge.callApp("jsClick1", data);
+
+            appBridge.callApp("jsBridge2Click", data);
         } catch (ex) { }
     }
 
@@ -96,13 +157,8 @@
     }
 
 
-    /*弹窗*/
-    function dialog(){
-        jsClick2();
-    }
-
-    <!-- 测试方法 -->
-    function JsHandler(){
+    <!-- 页面加载完就调用方法 -->
+    function finishLoadAndCall(){
      var objData = new Data();
         var handlerData = objData.handlerData;
         bridge.callApp("jsCall1", handlerData);
@@ -125,6 +181,7 @@
             status : "ok"
         }
     }
+
 </script>
 
 </body>
