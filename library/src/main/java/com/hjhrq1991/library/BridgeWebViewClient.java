@@ -117,6 +117,9 @@ public class BridgeWebViewClient extends WebViewClient {
 
     @Override
     public void onPageFinished(WebView view, String url) {
+        if (bridgeWebViewClientListener != null) {
+            bridgeWebViewClientListener.onPageFinishedFirst(view, url);
+        }
         //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
         if (BridgeConfig.toLoadJs != null && !url.contains("about:blank") && !isRedirected) {
             for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {

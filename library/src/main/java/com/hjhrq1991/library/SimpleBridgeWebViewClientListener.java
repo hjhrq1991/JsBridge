@@ -35,6 +35,11 @@ public class SimpleBridgeWebViewClientListener implements BridgeWebViewClientLis
     }
 
     @Override
+    public void onPageFinishedFirst(WebView view, String url) {
+
+    }
+
+    @Override
     public void onPageFinished(WebView view, String url) {
 
     }

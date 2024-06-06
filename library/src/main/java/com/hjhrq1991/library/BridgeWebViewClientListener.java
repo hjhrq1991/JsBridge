@@ -31,6 +31,18 @@ public interface BridgeWebViewClientListener {
 
     void onPageStarted(WebView view, String url, Bitmap favicon);
 
+    /**
+     * 页面完成回调，可用于注入js。在注入JS桥前调用
+     * @param view
+     * @param url
+     */
+    void onPageFinishedFirst(WebView view, String url);
+
+    /**
+     * 页面完成回调，在注入JS桥后调用
+     * @param view
+     * @param url
+     */
     void onPageFinished(WebView view, String url);
 
     void onReceivedError(WebView view, int errorCode, String description, String failingUrl);
