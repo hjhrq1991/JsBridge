@@ -18,4 +18,9 @@ public class BridgeConfig {
      * 自定义桥名
      */
     public static List<String> customBridge = Collections.singletonList(defaultBridge);
+
+    /**
+     * 需要过滤，不注入js桥的域名
+     */
+    public static List<String> filterDomain;
 }

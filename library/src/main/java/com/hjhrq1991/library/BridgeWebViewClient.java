@@ -2,6 +2,7 @@ package com.hjhrq1991.library;
 
 import android.graphics.Bitmap;
 import android.net.http.SslError;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
@@ -120,19 +121,31 @@ public class BridgeWebViewClient extends WebViewClient {
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onPageFinishedFirst(view, url);
         }
-        //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
-        if (BridgeConfig.toLoadJs != null && !url.contains("about:blank") && !isRedirected) {
-            for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
-                String bridgeName = BridgeConfig.customBridge.get(i);
-                BridgeUtil.webViewLoadLocalJs(view, BridgeConfig.toLoadJs, BridgeConfig.defaultBridge, bridgeName);
+        boolean canLoadJS = true;
+        //modify：hjhrq1991，检查是否需要注入js
+        if (BridgeConfig.filterDomain != null && !BridgeConfig.filterDomain.isEmpty()) {
+            for (int i = 0; i < BridgeConfig.filterDomain.size(); i++) {
+                String filter = BridgeConfig.filterDomain.get(i);
+                if (!TextUtils.isEmpty(url) && url.contains(filter)) {
+                    canLoadJS = false;
+                }
             }
         }
-
-        if (webView.getStartupMessage() != null) {
-            for (Message m : webView.getStartupMessage()) {
-                webView.dispatchMessage(m);
+        if (canLoadJS){
+            //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
+            if (BridgeConfig.toLoadJs != null && !url.contains("about:blank") && !isRedirected) {
+                for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
+                    String bridgeName = BridgeConfig.customBridge.get(i);
+                    BridgeUtil.webViewLoadLocalJs(view, BridgeConfig.toLoadJs, BridgeConfig.defaultBridge, bridgeName);
+                }
             }
-            webView.setStartupMessage(null);
+
+            if (webView.getStartupMessage() != null) {
+                for (Message m : webView.getStartupMessage()) {
+                    webView.dispatchMessage(m);
+                }
+                webView.setStartupMessage(null);
+            }
         }
 
         if (bridgeWebViewClientListener != null) {
