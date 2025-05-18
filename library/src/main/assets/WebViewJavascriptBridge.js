@@ -122,7 +122,7 @@
     // 每次批量发送3条消息
     var BATCH_SIZE = 5;
     // 最小发送间隔(ms)
-    var MIN_SEND_INTERVAL = 25;
+    var MIN_SEND_INTERVAL = 500;
     var lastSendTime = 0;
     var isSending = false;
 
@@ -263,16 +263,25 @@
     //前端调用
     function callHandler(handlerName, data, responseCallback) {
         var dataStr = JSON.stringify(data);
+        try {
+            // 如果 data 是字符串，解析它；否则直接使用
+            const request = typeof data === 'string' ? JSON.parse(data) : data;
+            const nativeConfig = JSON.stringify(request.nativeConfig);
+            console.log("App JSBridge", "callHandler：" + handlerName + "  callName：" + nativeConfig);
+        } catch (error) {
+            console.error("App JSBridge", "压缩数据时发生错误：", error);
+            console.error("App JSBridge", "callHandler：" + handlerName);
+        }
 
         var length = dataStr.length;
         // 默认不压缩
         var _data = dataStr;
 
         if (length > maxLength) {
-//            console.log("App JSBridge", "数据长度大于等于 " + maxLength / 10000 + " 万，调用asyncCallHandler");
+            console.log("App JSBridge", "数据长度大于等于 " + maxLength / 10000 + " 万，调用asyncCallHandler");
             asyncCallHandler(handlerName, data, responseCallback);
         } else {
-//            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩，直接执行");
+            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩，直接执行");
             synchronizationCallHandler(handlerName, data, responseCallback);
         }
     }
@@ -297,13 +306,13 @@
             try {
                 // ✅ 处理异常
                 var compress = await asyncCompress(dataStr);
-//                console.log("App JSBridge", "原始数据长度：" + JSON.stringify(data).length + " 压缩后数据长度：" + compress.length);
+                console.log("App JSBridge", "原始数据长度：" + JSON.stringify(data).length + " 压缩后数据长度：" + compress.length);
                 _data = "lzstring:" + compress
             } catch (error) {
                 console.error("App JSBridge", "压缩数据时发生错误：", error);
             }
         } else {
-//            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩");
+            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩");
         }
 
         // ✅ _data 现在是最终要发送的数据
@@ -400,11 +409,20 @@
                 }
 
                 // ... 其余原有逻辑保持不变
-                var _data = message.data;
-                if (_data.startsWith("lzstring:")) {
-                    asyncDispatchMessageFromNative(messageJSON);
-                } else {
-                    synchronizationDispatchMessageFromNative(messageJSON);
+                var parsedData = JSON.parse(messageJSON);
+
+                // 如果是数组，遍历处理每个消息
+                if (Array.isArray(parsedData)) {
+                    parsedData.forEach(function(message) {
+                        processSingleMessage(message);
+                    });
+                }
+                // 如果是单个对象，直接处理
+                else if (typeof parsedData === "object" && parsedData !== null) {
+                    processSingleMessage(parsedData);
+                }
+                // 无效数据
+                else {
                 }
             } catch (e) {
                 console.error("消息解析错误:", e);
@@ -412,20 +430,52 @@
         }, 0);
     }
 
-//    //提供给native使用,
+    //提供给native使用,
 //    function _dispatchMessageFromNative(messageJSON) {
 //        try {
-//            var message = JSON.parse(messageJSON);
-//            var _data = message.data;
-//            if (_data.startsWith("lzstring:")) {
-//                asyncDispatchMessageFromNative(messageJSON);
-//            } else {
-//                synchronizationDispatchMessageFromNative(messageJSON);
+//            console.error("解析数据:", messageJSON);
+//            var parsedData = JSON.parse(messageJSON);
+//
+//            // 如果是数组，遍历处理每个消息
+//            if (Array.isArray(parsedData)) {
+//                parsedData.forEach(function(message) {
+//                    processSingleMessage(message);
+//                });
+//            }
+//            // 如果是单个对象，直接处理
+//            else if (typeof parsedData === "object" && parsedData !== null) {
+//                processSingleMessage(parsedData);
+//            }
+//            // 无效数据
+//            else {
 //            }
 //        } catch (exception) {
-//
+//            console.error("消息解析错误:", exception);
 //        }
 //    }
+
+    function processSingleMessage(message) {
+        try {
+            // 检查必要字段
+            if (!message.data) {
+                throw new Error("data 字段缺失");
+            }
+
+            var _data = message.data;
+            if (typeof _data !== "string") {
+                throw new Error("data 必须是字符串");
+            }
+
+            // 根据 data 内容分发
+            if (_data.startsWith("lzstring:")) {
+                asyncDispatchMessageFromNative(JSON.stringify(message));
+            } else {
+                synchronizationDispatchMessageFromNative(JSON.stringify(message));
+            }
+        } catch (error) {
+            console.error("处理消息失败:", error.message, "\n消息内容:", message);
+        }
+    }
 
     function synchronizationDispatchMessageFromNative(messageJSON) {
         setTimeout(function() {
@@ -502,7 +552,7 @@
                         //存在压缩处理，进行解压缩操作
                         var decompress = _data.substring("lzstring:".length);
                         _data = await asyncDecompress(decompress);
-//                        console.log("App JSBridge", "send：" + " 数据量过大，需做解压处理 解压前长度：" + decompress.length + "  解压后长度：" + _data.length);
+                        console.log("App JSBridge", "send：" + " 数据量过大，需做解压处理 解压前长度：" + decompress.length + "  解压后长度：" + _data.length);
                     } else {
 
                     }
