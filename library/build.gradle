@@ -4,7 +4,7 @@ plugins {
 }
 
 def group = 'com.github.hjhrq1991'
-def libraryVersion = '1.1.6'
+def libraryVersion = '1.1.7'
 
 // Because the components are created only during the afterEvaluate phase, you must
 // configure your publications using the afterEvaluate() lifecycle method.
@@ -58,6 +58,7 @@ android {
 }
 
 dependencies {
+    api 'com.google.code.gson:gson:2.11.0'
 }
 
 //apply plugin: 'com.novoda.bintray-release'

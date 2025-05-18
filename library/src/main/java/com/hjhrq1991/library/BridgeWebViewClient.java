@@ -3,6 +3,7 @@ package com.hjhrq1991.library;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
@@ -12,6 +13,9 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -54,16 +58,26 @@ public class BridgeWebViewClient extends WebViewClient {
         }
         onPageStartedCount = 0;
 
+        Log.i("BridgeWebViewClient", "shouldOverrideUrlLoading url：" + url);
+
+
         try {
             url = URLDecoder.decode(url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
 
+        // =============== 新增批量消息处理 ===============
+        if (url.startsWith(BridgeUtil.YY_BATCH_DATA)) {
+            handleBatchMessage(url.substring(BridgeUtil.YY_BATCH_DATA.length()));
+            return true;
+        }
+        // =============== 批量消息处理结束 ===============
+
         if (url.startsWith(BridgeUtil.YY_RETURN_DATA)) { // 如果是返回数据
             webView.handlerReturnData(url);
             return true;
-        } else if (url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) { //
+        } else if (url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) { // 单条处理消息
             webView.flushMessageQueue();
             return true;
         } else {
@@ -84,16 +98,25 @@ public class BridgeWebViewClient extends WebViewClient {
         }
         onPageStartedCount = 0;
 
+        Log.i("BridgeWebViewClient", "shouldOverrideUrlLoading WebResourceRequest：" + url);
+
         try {
             url = URLDecoder.decode(url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
 
+        // =============== 新增批量消息处理 ===============
+        if (url.startsWith(BridgeUtil.YY_BATCH_DATA)) {
+            handleBatchMessage(url.substring(BridgeUtil.YY_BATCH_DATA.length()));
+            return true;
+        }
+        // =============== 批量消息处理结束 ===============
+
         if (url.startsWith(BridgeUtil.YY_RETURN_DATA)) { // 如果是返回数据
             webView.handlerReturnData(url);
             return true;
-        } else if (url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) { //
+        } else if (url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) { // 单条处理消息
             webView.flushMessageQueue();
             return true;
         } else {
@@ -102,6 +125,35 @@ public class BridgeWebViewClient extends WebViewClient {
             } else {
                 return super.shouldOverrideUrlLoading(view, request);
             }
+        }
+    }
+
+    // =============== 新增批量消息处理方法 ===============
+    private void handleBatchMessage(String encodedBatchData) {
+        try {
+            String batchData = URLDecoder.decode(encodedBatchData, "UTF-8");
+            JSONArray batch = new JSONArray(batchData);
+
+            for (int i = 0; i < batch.length(); i++) {
+                String message = batch.getString(i);
+                if (message.startsWith(BridgeUtil.YY_RETURN_DATA_PREFIX)) {
+                    // 处理批量返回数据
+                    webView.handlerReturnData(message);
+                } else if (message.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) {
+                    // 处理批量队列请求
+                    webView.flushMessageQueue();
+                } else {
+                    if (message.startsWith("[") && message.endsWith("]")) {
+                        webView.multiFlushMessageQueue(message);
+                    } else {
+                        webView.multiFlushMessageQueue("[" + message + "]");
+                    }
+                }
+            }
+        } catch (UnsupportedEncodingException e) {
+            Log.e("BridgeWebView", "Batch message decode error", e);
+        } catch (JSONException e) {
+            Log.e("BridgeWebView", "Batch message parse error", e);
         }
     }
 

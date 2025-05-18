@@ -5,6 +5,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -21,26 +23,52 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicLong;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     private final String TAG = "BridgeWebView";
+    private static final int MAX_BATCH_SIZE = 20;
+    private static final long BATCH_DELAY_MS = 50;
+    private static final int MAX_IN_FLIGHT_MESSAGES = 15;
 
-    private boolean isDebug = false;
+    private boolean isDebug = true;
     private BridgeWebViewClient bridgeWebViewClient;
 
-    Map<String, CallBackFunction> responseCallbacks = new HashMap<String, CallBackFunction>();
-    Map<String, BridgeHandler> messageHandlers = new HashMap<String, BridgeHandler>();
+    private HandlerThread handlerThread;
+    private Handler backgroundHandler;
+    private final Semaphore messageSemaphore = new Semaphore(MAX_IN_FLIGHT_MESSAGES);
+    private boolean handlerPosted = false;
+
+    Map<String, CallBackFunction> responseCallbacks = new HashMap<>();
+    Map<String, BridgeHandler> messageHandlers = new HashMap<>();
     BridgeHandler defaultHandler = new DefaultHandler();
 
-    private List<Message> startupMessage = new ArrayList<Message>();
+    private final PriorityBlockingQueue<Message> messageQueue = new PriorityBlockingQueue<>(50,
+            (m1, m2) -> Boolean.compare(m2.isHighPriority(), m1.isHighPriority()));
+
+    private List<Message> startupMessage = new ArrayList<>();
+    private final AtomicLong uniqueId = new AtomicLong(0);
+    private final Gson gson = new Gson();
+
+    private final Runnable batchDispatcher = new Runnable() {
+        @Override
+        public void run() {
+            dispatchBatch();
+            handlerPosted = false;
+        }
+    };
 
     public List<Message> getStartupMessage() {
         return startupMessage;
@@ -49,8 +77,6 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     public void setStartupMessage(List<Message> startupMessage) {
         this.startupMessage = startupMessage;
     }
-
-    private long uniqueId = 0;
 
     public boolean isDebug() {
         return isDebug;
@@ -90,6 +116,12 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true);
         }
+
+        // Initialize background handler thread
+        handlerThread = new HandlerThread("BridgeWebViewHandler");
+        handlerThread.start();
+        backgroundHandler = new Handler(handlerThread.getLooper());
+
         this.setWebViewClient(generateBridgeWebViewClient());
     }
 
@@ -107,7 +139,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             //TODO 这里需处理remove导致无法继续发送其他桥的消息
             f.onCallBack(data);
             responseCallbacks.remove(functionName);
-            return;
+            messageSemaphore.release(); // Release permit when response received
         }
     }
 
@@ -118,30 +150,123 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     @Override
     public void send(String data, CallBackFunction responseCallback) {
-        doSend(null, data, responseCallback);
+        doSend(null, data, responseCallback, false);
     }
 
-    private void doSend(String handlerName, String data, CallBackFunction responseCallback) {
-        Message m = new Message();
-        if (!TextUtils.isEmpty(data)) {
-            m.setData(data);
-        }
-        if (responseCallback != null) {
-            String callbackStr = String.format(BridgeUtil.CALLBACK_ID_FORMAT, ++uniqueId + (BridgeUtil.UNDERLINE_STR + SystemClock.currentThreadTimeMillis()));
-            responseCallbacks.put(callbackStr, responseCallback);
-            m.setCallbackId(callbackStr);
-        }
-        if (!TextUtils.isEmpty(handlerName)) {
-            m.setHandlerName(handlerName);
-        }
-        queueMessage(m);
+    public void sendHighPriority(String data, CallBackFunction responseCallback) {
+        doSend(null, data, responseCallback, true);
     }
+
+//    private void doSend(String handlerName, String data, CallBackFunction responseCallback, boolean highPriority) {
+//        Message m = new Message();
+//        if (!TextUtils.isEmpty(data)) {
+//            m.setData(data);
+//        }
+//        if (responseCallback != null) {
+//            String callbackStr = String.format(BridgeUtil.CALLBACK_ID_FORMAT, ++uniqueId.accumulateAndGet() + (BridgeUtil.UNDERLINE_STR + SystemClock.currentThreadTimeMillis()));
+//            responseCallbacks.put(callbackStr, responseCallback);
+//            m.setCallbackId(callbackStr);
+//        }
+//        if (!TextUtils.isEmpty(handlerName)) {
+//            m.setHandlerName(handlerName);
+//        }
+//        queueMessage(m);
+//    }
+
+    private void doSend(String handlerName, String data, CallBackFunction responseCallback, boolean highPriority) {
+        try {
+            if (!messageSemaphore.tryAcquire()) {
+                if (isDebug) Log.w(TAG, "Message queue full, dropping message");
+                return;
+            }
+
+            Message m = new Message();
+            m.setHighPriority(highPriority);
+
+            if (!TextUtils.isEmpty(data)) {
+                m.setData(data);
+            }
+
+            if (responseCallback != null) {
+                String callbackStr = String.format(BridgeUtil.CALLBACK_ID_FORMAT,
+                        uniqueId.incrementAndGet() + (BridgeUtil.UNDERLINE_STR + SystemClock.currentThreadTimeMillis()));
+
+                // Wrap callback to release semaphore
+                CallBackFunction wrappedCallback = responseData -> {
+                    responseCallback.onCallBack(responseData);
+                    messageSemaphore.release();
+                };
+
+                responseCallbacks.put(callbackStr, wrappedCallback);
+                m.setCallbackId(callbackStr);
+            }
+
+            if (!TextUtils.isEmpty(handlerName)) {
+                m.setHandlerName(handlerName);
+            }
+
+            queueMessage(m);
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending message", e);
+            messageSemaphore.release();
+        }
+    }
+
+//    private void queueMessage(Message m) {
+//        if (startupMessage != null) {
+//            startupMessage.add(m);
+//        } else {
+//            dispatchMessage(m);
+//        }
+//    }
 
     private void queueMessage(Message m) {
-        if (startupMessage != null) {
-            startupMessage.add(m);
-        } else {
-            dispatchMessage(m);
+        messageQueue.add(m);
+
+        if (messageQueue.size() >= MAX_BATCH_SIZE) {
+            backgroundHandler.removeCallbacks(batchDispatcher);
+            backgroundHandler.post(this::dispatchBatch);
+        } else if (!handlerPosted) {
+            backgroundHandler.postDelayed(batchDispatcher, BATCH_DELAY_MS);
+        }
+    }
+
+    private void dispatchBatch() {
+        List<Message> batch = new ArrayList<>(MAX_BATCH_SIZE);
+        messageQueue.drainTo(batch, MAX_BATCH_SIZE);
+
+        if (!batch.isEmpty()) {
+            String batchJson = gson.toJson(batch);
+            batchJson = batchJson.replaceAll("(\\\\)([^utrn])", "\\\\\\\\$1$2")
+                    .replaceAll("(?<=[^\\\\])(\")", "\\\\\"");
+
+            dispatchMessageBatch(batchJson);
+        }
+    }
+
+    private void dispatchMessageBatch(String messageJson) {
+        for (String bridgeName : BridgeConfig.customBridge) {
+            String javascriptCommand = String.format(
+                    BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName),
+                    messageJson);
+
+            if (isDebug) Log.i(TAG, bridgeName + " dispatchBatch: " + javascriptCommand);
+
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    evaluateJavascript(javascriptCommand, null);
+                } else {
+                    loadUrl(javascriptCommand);
+                }
+            } else {
+                post(() -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        evaluateJavascript(javascriptCommand, null);
+                    } else {
+                        loadUrl(javascriptCommand);
+                    }
+                });
+            }
         }
     }
 
@@ -156,97 +281,181 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), messageJson);
             if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
                 if (isDebug) Log.i(TAG, bridgeName + "   console   dispatchMessage：" + javascriptCommand);
-                this.loadUrl(javascriptCommand);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    this.evaluateJavascript(javascriptCommand, null);
+                } else {
+                    this.loadUrl(javascriptCommand);
+                }
             }
         }
     }
+
+//    public void flushMessageQueue() {
+//        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+//            for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
+//                String bridgeName = BridgeConfig.customBridge.get(i);
+//                flushMessageQueue(bridgeName);
+//            }
+//        }
+//    }
 
     public void flushMessageQueue() {
-        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-            for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
-                String bridgeName = BridgeConfig.customBridge.get(i);
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            for (String bridgeName : BridgeConfig.customBridge) {
                 flushMessageQueue(bridgeName);
             }
+        } else {
+            post(this::flushMessageQueue);
         }
     }
 
+    /**
+     * 多数据
+     * @param jsonData
+     */
+    public void multiFlushMessageQueue(String jsonData) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            for (String bridgeName : BridgeConfig.customBridge) {
+                handleFlushResponse(bridgeName, jsonData);
+            }
+        } else {
+            post(this::flushMessageQueue);
+        }
+    }
+
+//    private void flushMessageQueue(String bridgeName) {
+//        if (isDebug) Log.i(TAG, bridgeName + "   console  执行 flushMessageQueue");
+//        loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), new CallBackFunction() {
+//            @Override
+//            public void onCallBack(String data) {
+//                if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue.onCallBack：" + data);
+//                // deserializeMessage
+//                List<Message> list = null;
+//                try {
+//                    list = Message.toArrayList(data);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return;
+//                }
+//                if (list == null || list.size() == 0) {
+//                    return;
+//                }
+//                for (int i = 0; i < list.size(); i++) {
+//                    Message m = list.get(i);
+//                    String responseId = m.getResponseId();
+//                    // 是否是response
+//                    if (!TextUtils.isEmpty(responseId)) {
+//                        CallBackFunction function = responseCallbacks.get(responseId);
+//                        String responseData = m.getResponseData();
+//                        if (function != null) function.onCallBack(responseData);
+//                        responseCallbacks.remove(responseId);
+//
+//                        if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId不为空");
+//                    } else {
+//                        if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId为空");
+//                        CallBackFunction responseFunction = null;
+//                        // if had callbackId
+//                        final String callbackId = m.getCallbackId();
+//                        if (!TextUtils.isEmpty(callbackId)) {
+//                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId不为空");
+//                            responseFunction = new CallBackFunction() {
+//                                @Override
+//                                public void onCallBack(String data) {
+//
+//                                    Message responseMsg = new Message();
+//                                    responseMsg.setResponseId(callbackId);
+//                                    responseMsg.setResponseData(data);
+//                                    queueMessage(responseMsg);
+//                                }
+//                            };
+//                        } else {
+//                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId为空");
+//                            responseFunction = new CallBackFunction() {
+//                                @Override
+//                                public void onCallBack(String data) {
+//                                    // do nothing
+//                                }
+//                            };
+//                        }
+//                        BridgeHandler handler;
+//                        if (!TextUtils.isEmpty(m.getHandlerName())) {
+//                            handler = messageHandlers.get(m.getHandlerName());
+//                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName："+m.getHandlerName());
+//                        } else {
+//                            handler = defaultHandler;
+//                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName：为空");
+//                        }
+//
+//                        if (handler != null) {
+//                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler不为空，回调数据");
+//                            handler.handler(m.getData(), responseFunction);
+//                        } else {
+//                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler为空");
+//                        }
+//                    }
+//                }
+//            }
+//        });
+//    }
+
     private void flushMessageQueue(String bridgeName) {
-        if (isDebug) Log.i(TAG, bridgeName + "   console  执行 flushMessageQueue");
-        loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), new CallBackFunction() {
-            @Override
-            public void onCallBack(String data) {
-                if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue.onCallBack：" + data);
-                // deserializeMessage
-                List<Message> list = null;
-                try {
-                    list = Message.toArrayList(data);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return;
-                }
-                if (list == null || list.size() == 0) {
-                    return;
-                }
-                for (int i = 0; i < list.size(); i++) {
-                    Message m = list.get(i);
-                    String responseId = m.getResponseId();
-                    // 是否是response
-                    if (!TextUtils.isEmpty(responseId)) {
-                        CallBackFunction function = responseCallbacks.get(responseId);
-                        String responseData = m.getResponseData();
-                        if (function != null) function.onCallBack(responseData);
-                        responseCallbacks.remove(responseId);
+        if (isDebug) Log.i(TAG, bridgeName + " flushMessageQueue");
 
-                        if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId不为空");
-                    } else {
-                        if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：responseId为空");
-                        CallBackFunction responseFunction = null;
-                        // if had callbackId
-                        final String callbackId = m.getCallbackId();
-                        if (!TextUtils.isEmpty(callbackId)) {
-                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId不为空");
-                            responseFunction = new CallBackFunction() {
-                                @Override
-                                public void onCallBack(String data) {
+        String jsCommand = BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName);
 
-                                    Message responseMsg = new Message();
-                                    responseMsg.setResponseId(callbackId);
-                                    responseMsg.setResponseData(data);
-                                    queueMessage(responseMsg);
-                                }
-                            };
-                        } else {
-                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：onCallBackId为空");
-                            responseFunction = new CallBackFunction() {
-                                @Override
-                                public void onCallBack(String data) {
-                                    // do nothing
-                                }
-                            };
-                        }
-                        BridgeHandler handler;
-                        if (!TextUtils.isEmpty(m.getHandlerName())) {
-                            handler = messageHandlers.get(m.getHandlerName());
-                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName："+m.getHandlerName());
-                        } else {
-                            handler = defaultHandler;
-                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handlerName：为空");
-                        }
+        loadUrl(jsCommand, data -> handleFlushResponse(bridgeName, data));
+    }
 
-                        if (handler != null) {
-                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler不为空，回调数据");
-                            handler.handler(m.getData(), responseFunction);
-                        } else {
-                            if (isDebug) Log.i(TAG, bridgeName + "   console   flushMessageQueue：handler为空");
-                        }
+    private void handleFlushResponse(String bridgeName, String jsonData) {
+        if (isDebug) Log.i(TAG, bridgeName + " flushResponse: " + jsonData);
+
+        try {
+            List<Message> list = Message.toArrayList(jsonData);
+            if (list == null || list.isEmpty()) return;
+
+            for (Message m : list) {
+                if (!TextUtils.isEmpty(m.getResponseId())) {
+                    // Handle response
+                    CallBackFunction function = responseCallbacks.get(m.getResponseId());
+                    if (function != null) {
+                        function.onCallBack(m.getResponseData());
+                        responseCallbacks.remove(m.getResponseId());
+                    }
+                } else {
+                    // Handle request with distinct parameter name
+                    CallBackFunction responseFunction = !TextUtils.isEmpty(m.getCallbackId())
+                            ? createResponseCallback(m.getCallbackId())
+                            : responseData -> {};  // Changed parameter name to responseData
+
+                    BridgeHandler handler = !TextUtils.isEmpty(m.getHandlerName())
+                            ? messageHandlers.get(m.getHandlerName())
+                            : defaultHandler;
+
+                    if (handler != null) {
+                        handler.handler(m.getData(), responseFunction);
                     }
                 }
             }
-        });
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing flush response", e);
+        }
+    }
+
+    private CallBackFunction createResponseCallback(final String callbackId) {
+        return responseData -> {
+            Message responseMsg = new Message();
+            responseMsg.setResponseId(callbackId);
+            responseMsg.setResponseData(responseData);
+            queueMessage(responseMsg);
+        };
     }
 
     public void loadUrl(String jsUrl, CallBackFunction returnCallback) {
-        this.loadUrl(jsUrl);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            this.evaluateJavascript(jsUrl, null);
+        } else {
+            this.loadUrl(jsUrl);
+        }
         for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
             String bridgeName = BridgeConfig.customBridge.get(i);
             responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl, bridgeName), returnCallback);
@@ -273,7 +482,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
      * @param callBack    callBack
      */
     public void callHandler(String handlerName, String data, CallBackFunction callBack) {
-        doSend(handlerName, data, callBack);
+        doSend(handlerName, data, callBack, false);
     }
 
     public void setBridgeWebViewClientListener(BridgeWebViewClientListener bridgeWebViewClientListener) {
@@ -429,14 +638,14 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                 }
             }
 
-            @Override
-            public void onReachedMaxAppCacheSize(long requiredStorage, long quota, WebStorage.QuotaUpdater quotaUpdater) {
-                if (onWebChromeClientListener != null) {
-                    onWebChromeClientListener.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
-                } else {
-                    super.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
-                }
-            }
+//            @Override
+//            public void onReachedMaxAppCacheSize(long requiredStorage, long quota, WebStorage.QuotaUpdater quotaUpdater) {
+//                if (onWebChromeClientListener != null) {
+//                    onWebChromeClientListener.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
+//                } else {
+//                    super.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
+//                }
+//            }
 
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
@@ -523,6 +732,30 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             }
         };
         return wvcc;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        cleanup();
+    }
+
+    public void cleanup() {
+        if (handlerThread != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                handlerThread.quitSafely();
+            } else {
+                handlerThread.quit();
+            }
+        }
+        if (messageQueue != null) messageQueue.clear();
+        if (responseCallbacks != null) responseCallbacks.clear();
+        if (messageHandlers != null) messageHandlers.clear();
+        if (startupMessage != null) startupMessage.clear();
+
+        if (bridgeWebViewClient != null) {
+            bridgeWebViewClient.removeListener();
+        }
     }
 
     /**

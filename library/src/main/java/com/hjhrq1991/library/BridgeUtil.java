@@ -10,8 +10,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class BridgeUtil {
-    final static String YY_OVERRIDE_SCHEMA = "yy://";
-    final static String YY_RETURN_DATA = YY_OVERRIDE_SCHEMA + "return/";//格式为   yy://return/{function}/returncontent
+    // 批量处理协议
+    public static final String YY_BATCH_DATA = "yy://batch/";
+    public static final String YY_BATCH_RETURN = "yy://batch_return/";
+
+    // 修改原有协议常量
+    public static final String YY_RETURN_DATA = "yy://return/"; //格式为   yy://return/{function}/returncontent
+    public static final String YY_OVERRIDE_SCHEMA = "yy://bridge/";
+
+    // 新增子协议前缀
+    public static final String YY_RETURN_DATA_PREFIX = "yy://return/_fetchQueue/";
+    public static final String YY_OVERRIDE_SCHEMA_PREFIX = "yy://bridge/_fetchQueue/";
+
     final static String YY_FETCH_QUEUE = YY_RETURN_DATA + "_fetchQueue/";
     final static String EMPTY_STR = "";
     final static String UNDERLINE_STR = "_";
