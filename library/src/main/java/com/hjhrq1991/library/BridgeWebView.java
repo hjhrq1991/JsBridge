@@ -316,10 +316,12 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     public void multiFlushMessageQueue(String jsonData) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             for (String bridgeName : BridgeConfig.customBridge) {
-                handleFlushResponse(bridgeName, jsonData);
+                if (isDebug) Log.i(TAG, bridgeName + " multiFlushMessageQueue");
+                String jsCommand = BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName);
+                loadUrl(jsCommand, data -> handleFlushResponse(bridgeName, jsonData));
             }
         } else {
-            post(this::flushMessageQueue);
+            post(() -> multiFlushMessageQueue(jsonData));
         }
     }
 
