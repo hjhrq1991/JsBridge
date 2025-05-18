@@ -103,7 +103,7 @@
 
     // 常量定义
     var CUSTOM_PROTOCOL_SCHEME = 'yy';
-    var QUEUE_HAS_MESSAGE = '__QUEUE_MESSAGE__/';
+    var QUEUE_HAS_MESSAGE = 'bridge/';
     var MAX_QUEUE_LENGTH = 500;
     // 数据交互最大长度，超过则进行压缩处理，避免导致无响应
     var maxLength = 10 * 10000;
@@ -119,8 +119,10 @@
     var isBridgeInit = false;
 
     // ==================== 流量控制核心 ====================
-    var BATCH_SIZE = 3;          // 每次批量发送3条消息
-    var MIN_SEND_INTERVAL = 25;  // 最小发送间隔(ms)
+    // 每次批量发送3条消息
+    var BATCH_SIZE = 5;
+    // 最小发送间隔(ms)
+    var MIN_SEND_INTERVAL = 25;
     var lastSendTime = 0;
     var isSending = false;
 
@@ -163,6 +165,63 @@
     //            });
     //        }
     //    }
+
+    // ==================== 核心优化部分 ====================
+    function enhancedDoSend(message, responseCallback) {
+        // 1. 注册回调（带超时）
+        if (responseCallback) {
+            var callbackId = 'cb_' + (uniqueId++) + '_' + Date.now();
+            responseCallbacks[callbackId] = responseCallback;
+            message.callbackId = callbackId;
+
+            // 8秒超时
+            setTimeout(function() {
+                if (responseCallbacks[callbackId]) {
+                    responseCallbacks[callbackId]({ error: "timeout" });
+                    delete responseCallbacks[callbackId];
+                }
+            }, 8000);
+        }
+
+        // 2. 队列控制
+        if (sendMessageQueue.length >= MAX_QUEUE_LENGTH) {
+            var removed = sendMessageQueue.shift();
+            if (removed.callbackId) {
+                delete responseCallbacks[removed.callbackId];
+            }
+        }
+
+        sendMessageQueue.push(message);
+        scheduleBatchSend();
+    }
+
+    function scheduleBatchSend() {
+        if (isSending || sendMessageQueue.length === 0) return;
+
+        var now = Date.now();
+        var delay = Math.max(0, MIN_SEND_INTERVAL - (now - lastSendTime));
+
+        setTimeout(function() {
+            isSending = true;
+
+            // 批量取出消息
+            var batch = [];
+            while (batch.length < BATCH_SIZE && sendMessageQueue.length > 0) {
+                batch.push(sendMessageQueue.shift());
+            }
+
+            // 发送批量消息
+            var batchData = encodeURIComponent(JSON.stringify(batch));
+            messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch/' + batchData;
+            lastSendTime = Date.now();
+
+            // 继续处理剩余消息
+            isSending = false;
+            if (sendMessageQueue.length > 0) {
+                scheduleBatchSend();
+            }
+        }, delay);
+    }
 
     function _createQueueReadyIframe(doc) {
         messagingIframe = doc.createElement('iframe');
@@ -263,34 +322,54 @@
         }, responseCallback);
     }
 
-    //sendMessage add message, 触发native处理 sendMessage
+    // ==================== 原有函数改造 ====================
     function _doSend(message, responseCallback) {
-        // 1. 检查队列是否堆积
-        if (sendMessageQueue.length >= MAX_QUEUE_LENGTH) {
-            console.warn("JS Bridge 队列积压，丢弃最旧的消息");
-            // 移除最旧的消息
-            sendMessageQueue.shift();
-        }
-
-        // 2. 如果有回调，检查是否已有太多未完成回调
-        if (responseCallback) {
-            const callbackId = 'cb_' + (uniqueId++) + '_' + Date.now();
-            responseCallbacks[callbackId] = responseCallback;
-            message.callbackId = callbackId;
-
-            // 添加超时清理
-            setTimeout(() => {
-                if (responseCallbacks[callbackId]) {
-                    // 超时后删除
-                    responseCallback({ error: "JS Bridge 回调超时" });
-                    delete responseCallbacks[callbackId];
-                }
-            }, 20 * 1000);
-        }
-
-        sendMessageQueue.push(message);
-        messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://' + QUEUE_HAS_MESSAGE;
+        enhancedDoSend(message, responseCallback);
     }
+
+    function _fetchQueue() {
+        if (!isBridgeInit) return;
+
+        // 批量取出所有消息
+        var batch = [];
+        while (sendMessageQueue.length > 0) {
+            batch.push(sendMessageQueue.shift());
+        }
+
+        if (batch.length > 0) {
+            var batchData = encodeURIComponent(JSON.stringify(batch));
+            messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch_return/_fetchQueue/' + batchData;
+        }
+    }
+
+    //sendMessage add message, 触发native处理 sendMessage
+//    function _doSend(message, responseCallback) {
+//        // 1. 检查队列是否堆积
+//        if (sendMessageQueue.length >= MAX_QUEUE_LENGTH) {
+//            console.warn("JS Bridge 队列积压，丢弃最旧的消息");
+//            // 移除最旧的消息
+//            sendMessageQueue.shift();
+//        }
+//
+//        // 2. 如果有回调，检查是否已有太多未完成回调
+//        if (responseCallback) {
+//            const callbackId = 'cb_' + (uniqueId++) + '_' + Date.now();
+//            responseCallbacks[callbackId] = responseCallback;
+//            message.callbackId = callbackId;
+//
+//            // 添加超时清理
+//            setTimeout(() => {
+//                if (responseCallbacks[callbackId]) {
+//                    // 超时后删除
+//                    responseCallback({ error: "JS Bridge 回调超时" });
+//                    delete responseCallbacks[callbackId];
+//                }
+//            }, 20 * 1000);
+//        }
+//
+//        sendMessageQueue.push(message);
+//        messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://' + QUEUE_HAS_MESSAGE;
+//    }
 
     // 提供给native调用,该函数作用:获取sendMessageQueue返回给native,由于android不能直接获取返回的内容,所以使用url shouldOverrideUrlLoading 的方式返回内容
     function _fetchQueue() {
@@ -302,20 +381,60 @@
         messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://return/_fetchQueue/' + encodeURIComponent(messageQueueString);
     }
 
-    //提供给native使用,
+    // ==================== Native消息处理优化 ====================
     function _dispatchMessageFromNative(messageJSON) {
-        try {
-            var message = JSON.parse(messageJSON);
-            var _data = message.data;
-            if (_data.startsWith("lzstring:")) {
-                asyncDispatchMessageFromNative(messageJSON);
-            } else {
-                synchronizationDispatchMessageFromNative(messageJSON);
-            }
-        } catch (exception) {
+        setTimeout(function() {
+            try {
+                var message = JSON.parse(messageJSON);
 
-        }
+                // 批量响应处理
+                if (message.responseBatch) {
+                    message.responseBatch.forEach(function(item) {
+                        if (item.responseId && responseCallbacks[item.responseId]) {
+                            responseCallbacks[item.responseId](item.responseData);
+                            delete responseCallbacks[item.responseId];
+                        }
+                    });
+                    return;
+                }
+
+                // 单条消息处理（保持原逻辑）
+                if (message.responseId) {
+                    var callback = responseCallbacks[message.responseId];
+                    if (callback) {
+                        callback(message.responseData);
+                        delete responseCallbacks[message.responseId];
+                    }
+                    return;
+                }
+
+                // ... 其余原有逻辑保持不变
+                var _data = message.data;
+                if (_data.startsWith("lzstring:")) {
+                    asyncDispatchMessageFromNative(messageJSON);
+                } else {
+                    synchronizationDispatchMessageFromNative(messageJSON);
+                }
+            } catch (e) {
+                console.error("消息解析错误:", e);
+            }
+        }, 0);
     }
+
+//    //提供给native使用,
+//    function _dispatchMessageFromNative(messageJSON) {
+//        try {
+//            var message = JSON.parse(messageJSON);
+//            var _data = message.data;
+//            if (_data.startsWith("lzstring:")) {
+//                asyncDispatchMessageFromNative(messageJSON);
+//            } else {
+//                synchronizationDispatchMessageFromNative(messageJSON);
+//            }
+//        } catch (exception) {
+//
+//        }
+//    }
 
     function synchronizationDispatchMessageFromNative(messageJSON) {
         setTimeout(function() {
@@ -424,7 +543,9 @@
 
     var WebViewJavascriptBridge = window.WebViewJavascriptBridge = {
         init: init,
-        send: send,
+        send: function(data, responseCallback) {
+            _doSend({ data: data }, responseCallback);
+        },
         registerHandler: registerHandler,
         callHandler: callHandler,
         _fetchQueue: _fetchQueue,
