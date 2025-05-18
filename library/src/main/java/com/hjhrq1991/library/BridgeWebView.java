@@ -43,7 +43,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     private static final long BATCH_DELAY_MS = 50;
     private static final int MAX_IN_FLIGHT_MESSAGES = 15;
 
-    private boolean isDebug = true;
+    private boolean isDebug = false;
     private BridgeWebViewClient bridgeWebViewClient;
 
     private HandlerThread handlerThread;
@@ -638,14 +638,14 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                 }
             }
 
-//            @Override
-//            public void onReachedMaxAppCacheSize(long requiredStorage, long quota, WebStorage.QuotaUpdater quotaUpdater) {
-//                if (onWebChromeClientListener != null) {
-//                    onWebChromeClientListener.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
-//                } else {
-//                    super.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
-//                }
-//            }
+            @Override
+            public void onReachedMaxAppCacheSize(long requiredStorage, long quota, WebStorage.QuotaUpdater quotaUpdater) {
+                if (onWebChromeClientListener != null) {
+                    onWebChromeClientListener.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
+                } else {
+                    super.onReachedMaxAppCacheSize(requiredStorage, quota, quotaUpdater);
+                }
+            }
 
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {

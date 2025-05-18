@@ -263,25 +263,16 @@
     //前端调用
     function callHandler(handlerName, data, responseCallback) {
         var dataStr = JSON.stringify(data);
-        try {
-            // 如果 data 是字符串，解析它；否则直接使用
-            const request = typeof data === 'string' ? JSON.parse(data) : data;
-            const nativeConfig = JSON.stringify(request.nativeConfig);
-            console.log("App JSBridge", "callHandler：" + handlerName + "  callName：" + nativeConfig);
-        } catch (error) {
-            console.error("App JSBridge", "压缩数据时发生错误：", error);
-            console.error("App JSBridge", "callHandler：" + handlerName);
-        }
 
         var length = dataStr.length;
         // 默认不压缩
         var _data = dataStr;
 
         if (length > maxLength) {
-            console.log("App JSBridge", "数据长度大于等于 " + maxLength / 10000 + " 万，调用asyncCallHandler");
+//            console.log("App JSBridge", "数据长度大于等于 " + maxLength / 10000 + " 万，调用asyncCallHandler");
             asyncCallHandler(handlerName, data, responseCallback);
         } else {
-            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩，直接执行");
+//            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩，直接执行");
             synchronizationCallHandler(handlerName, data, responseCallback);
         }
     }
@@ -306,13 +297,13 @@
             try {
                 // ✅ 处理异常
                 var compress = await asyncCompress(dataStr);
-                console.log("App JSBridge", "原始数据长度：" + JSON.stringify(data).length + " 压缩后数据长度：" + compress.length);
+//                console.log("App JSBridge", "原始数据长度：" + JSON.stringify(data).length + " 压缩后数据长度：" + compress.length);
                 _data = "lzstring:" + compress
             } catch (error) {
                 console.error("App JSBridge", "压缩数据时发生错误：", error);
             }
         } else {
-            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩");
+//            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩");
         }
 
         // ✅ _data 现在是最终要发送的数据
@@ -511,7 +502,7 @@
                         //存在压缩处理，进行解压缩操作
                         var decompress = _data.substring("lzstring:".length);
                         _data = await asyncDecompress(decompress);
-                        console.log("App JSBridge", "send：" + " 数据量过大，需做解压处理 解压前长度：" + decompress.length + "  解压后长度：" + _data.length);
+//                        console.log("App JSBridge", "send：" + " 数据量过大，需做解压处理 解压前长度：" + decompress.length + "  解压后长度：" + _data.length);
                     } else {
 
                     }

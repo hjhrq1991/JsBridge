@@ -58,8 +58,7 @@ public class BridgeWebViewClient extends WebViewClient {
         }
         onPageStartedCount = 0;
 
-        Log.i("BridgeWebViewClient", "shouldOverrideUrlLoading url：" + url);
-
+//        Log.i("BridgeWebViewClient", "shouldOverrideUrlLoading url：" + url);
 
         try {
             url = URLDecoder.decode(url, "UTF-8");
@@ -98,7 +97,7 @@ public class BridgeWebViewClient extends WebViewClient {
         }
         onPageStartedCount = 0;
 
-        Log.i("BridgeWebViewClient", "shouldOverrideUrlLoading WebResourceRequest：" + url);
+//        Log.i("BridgeWebViewClient", "shouldOverrideUrlLoading WebResourceRequest：" + url);
 
         try {
             url = URLDecoder.decode(url, "UTF-8");
