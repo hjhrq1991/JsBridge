@@ -293,6 +293,12 @@ Js桥的处理在WebViewClient里进行，因此使用setWebViewClient()方法�
 
 ```
 
+### 混淆
+从1.1.7版本开始需要增加混淆规则
+```maven
+-keep public class com.hjhrq1991.library.Message{*;}
+```
+
 ### 二、TbsBridgeWebView
 
 TbsBridgeWebView基于Tbs(腾讯浏览服务)X5内核，结合JsBridge的自定义WebView。
