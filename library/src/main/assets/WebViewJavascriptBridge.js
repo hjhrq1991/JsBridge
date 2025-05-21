@@ -119,10 +119,10 @@
     var isBridgeInit = false;
 
     // ==================== 流量控制核心 ====================
-    // 每次批量发送3条消息
+    // 每次批量发送5条消息
     var BATCH_SIZE = 5;
     // 最小发送间隔(ms)
-    var MIN_SEND_INTERVAL = 500;
+    var MIN_SEND_INTERVAL = 100;
     var lastSendTime = 0;
     var isSending = false;
 
@@ -211,7 +211,7 @@
             }
 
             // 发送批量消息
-            var batchData = encodeURIComponent(JSON.stringify(batch));
+            var batchData = encodeURIComponent(JSON.stringify(batch).replace(/%/g, '%25'));
             messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch/' + batchData;
             lastSendTime = Date.now();
 
@@ -231,6 +231,7 @@
 
     //set default messageHandler
     function init(messageHandler) {
+        console.error("App JSBridge", "JS桥连接初始化成功");
         isBridgeInit = true;
         if (WebViewJavascriptBridge._messageHandler) {
             throw new Error('WebViewJavascriptBridge.init called twice');

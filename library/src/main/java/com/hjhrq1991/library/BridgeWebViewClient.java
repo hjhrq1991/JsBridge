@@ -130,7 +130,7 @@ public class BridgeWebViewClient extends WebViewClient {
     // =============== 新增批量消息处理方法 ===============
     private void handleBatchMessage(String encodedBatchData) {
         try {
-            String batchData = URLDecoder.decode(encodedBatchData, "UTF-8");
+            String batchData = safeUrlDecode(encodedBatchData);
             JSONArray batch = new JSONArray(batchData);
 
             for (int i = 0; i < batch.length(); i++) {
@@ -149,10 +149,20 @@ public class BridgeWebViewClient extends WebViewClient {
                     }
                 }
             }
-        } catch (UnsupportedEncodingException e) {
-            Log.e("BridgeWebView", "Batch message decode error", e);
         } catch (JSONException e) {
             Log.e("BridgeWebView", "Batch message parse error", e);
+        } catch (Exception e) {
+            Log.e("BridgeWebView", "Batch message error", e);
+        }
+    }
+
+    private String safeUrlDecode(String url) {
+        try {
+            // 先替换所有非编码用途的 %（后跟非十六进制字符的情况）
+            String sanitized = url.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
+            return URLDecoder.decode(sanitized, "UTF-8");
+        } catch (Exception e) {
+            return url; // 极端情况下返回原始字符串
         }
     }
 
