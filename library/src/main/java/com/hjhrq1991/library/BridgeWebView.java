@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -124,6 +125,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     // url：yy://return/_fetchQueue/[{"handlerName":"jsClick1","data":"{\"title\":\"hello title\"}"}]
     public void handlerReturnData(String url) {
+        logQueueStatus();
         if (url.endsWith("[]")) return; //当以[]结尾时表示handlerName也没有，则该情况丢弃
         String functionName = BridgeUtil.getFunctionFromReturnUrl(url);
         CallBackFunction f = responseCallbacks.get(functionName);
@@ -167,6 +169,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 //    }
 
     private void doSend(String handlerName, String data, CallBackFunction responseCallback, boolean highPriority) {
+        logQueueStatus();
         try {
             if (!messageSemaphore.tryAcquire()) {
                 if (BridgeConfig.isDebug) Log.w(BridgeConfig.TAG, "Message queue full, dropping message");
@@ -184,14 +187,29 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                 String callbackStr = String.format(BridgeUtil.CALLBACK_ID_FORMAT,
                         uniqueId.incrementAndGet() + (BridgeUtil.UNDERLINE_STR + SystemClock.currentThreadTimeMillis()));
 
-                // Wrap callback to release semaphore
+                // --- 关键修改：双重保险（回调释放 + 超时释放）---
+                AtomicBoolean callbackFired = new AtomicBoolean(false);
+
+                // 包装回调
                 CallBackFunction wrappedCallback = responseData -> {
-                    try {
-                        responseCallback.onCallBack(responseData);
-                    } finally {
-                        messageSemaphore.release();
+                    if (callbackFired.compareAndSet(false, true)) {
+                        try {
+                            responseCallback.onCallBack(responseData);
+                        } finally {
+                            messageSemaphore.release();
+                            if (BridgeConfig.isDebug) Log.d(BridgeConfig.TAG, "Callback executed: " + callbackStr);
+                        }
                     }
                 };
+
+                // 设置超时释放（即使前端未回调）
+                backgroundHandler.postDelayed(() -> {
+                    if (callbackFired.compareAndSet(false, true)) {
+                        messageSemaphore.release();
+                        responseCallbacks.remove(callbackStr); // 清理残留回调
+                        if (BridgeConfig.isDebug) Log.w(BridgeConfig.TAG, "Force released due to timeout: " + callbackStr);
+                    }
+                }, BridgeConfig.SEMAPHORE_CALLBACK_TIMEOUT_MS); // 超时自动释放
 
                 responseCallbacks.put(callbackStr, wrappedCallback);
                 m.setCallbackId(callbackStr);
@@ -203,8 +221,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                 backgroundHandler.postDelayed(() -> {
                     if (BridgeConfig.isDebug) Log.w(BridgeConfig.TAG, "No response received, releasing semaphore for message: " + m.getData());
                     messageSemaphore.release();
-                }, BridgeConfig.messageTimeout); // 超时自动释放
-
+                }, BridgeConfig.SEMAPHORE_NO_CALLBACK_TIMEOUT_MS); // 超时自动释放
             }
 
             if (!TextUtils.isEmpty(handlerName)) {
@@ -216,6 +233,16 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             // 发生异常时释放许可
             if (BridgeConfig.isDebug) Log.e(BridgeConfig.TAG, "Error sending message", e);
             messageSemaphore.release();
+        }
+    }
+
+    // 在类中添加
+    private void logQueueStatus() {
+        if (BridgeConfig.isDebug) {
+            Log.d(BridgeConfig.TAG, String.format("Queue status: Available permits=%d, Queue size=%d, Callbacks=%d",
+                    messageSemaphore.availablePermits(),
+                    messageQueue.size(),
+                    responseCallbacks.size()));
         }
     }
 

@@ -29,9 +29,14 @@ public class BridgeConfig {
     public static List<String> filterDomain;
 
     /**
-     * 消息超时未处理超时时间
+     * 消息超时未处理超时时间（有callback）
      */
-    public static long messageTimeout = 5 * 1000;
+    public static long SEMAPHORE_CALLBACK_TIMEOUT_MS = 5 * 1000;
+
+    /**
+     * 消息超时未处理超时时间（无callback）
+     */
+    public static long SEMAPHORE_NO_CALLBACK_TIMEOUT_MS = 5 * 1000;
 
     /**
      * 最大消息处理数
