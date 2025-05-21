@@ -38,17 +38,14 @@ import java.util.concurrent.atomic.AtomicLong;
 @SuppressLint("SetJavaScriptEnabled")
 public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
-    private final String TAG = "BridgeWebView";
     private static final int MAX_BATCH_SIZE = 20;
     private static final long BATCH_DELAY_MS = 50;
-    private static final int MAX_IN_FLIGHT_MESSAGES = 15;
 
-    private boolean isDebug = false;
     private BridgeWebViewClient bridgeWebViewClient;
 
     private HandlerThread handlerThread;
     private Handler backgroundHandler;
-    private final Semaphore messageSemaphore = new Semaphore(MAX_IN_FLIGHT_MESSAGES);
+    private final Semaphore messageSemaphore = new Semaphore(BridgeConfig.MAX_IN_FLIGHT_MESSAGES);
     private boolean handlerPosted = false;
 
     Map<String, CallBackFunction> responseCallbacks = new HashMap<>();
@@ -76,14 +73,6 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     public void setStartupMessage(List<Message> startupMessage) {
         this.startupMessage = startupMessage;
-    }
-
-    public boolean isDebug() {
-        return isDebug;
-    }
-
-    public void setDebug(boolean debug) {
-        isDebug = debug;
     }
 
     public BridgeWebView(Context context, AttributeSet attrs) {
@@ -122,6 +111,10 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         handlerThread.start();
         backgroundHandler = new Handler(handlerThread.getLooper());
 
+        this.setWebViewClient(generateBridgeWebViewClient());
+    }
+
+    public void setWebViewClient() {
         this.setWebViewClient(generateBridgeWebViewClient());
     }
 
@@ -176,7 +169,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     private void doSend(String handlerName, String data, CallBackFunction responseCallback, boolean highPriority) {
         try {
             if (!messageSemaphore.tryAcquire()) {
-                if (isDebug) Log.w(TAG, "Message queue full, dropping message");
+                if (BridgeConfig.isDebug) Log.w(BridgeConfig.TAG, "Message queue full, dropping message");
                 return;
             }
 
@@ -193,12 +186,25 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
                 // Wrap callback to release semaphore
                 CallBackFunction wrappedCallback = responseData -> {
-                    responseCallback.onCallBack(responseData);
-                    messageSemaphore.release();
+                    try {
+                        responseCallback.onCallBack(responseData);
+                    } finally {
+                        messageSemaphore.release();
+                    }
                 };
 
                 responseCallbacks.put(callbackStr, wrappedCallback);
                 m.setCallbackId(callbackStr);
+            } else {
+                // 没有回调的消息，需要单独处理释放
+                m.setReleaseSemaphore(true);
+
+                // 无回调的消息：设置超时自动释放信号量（例如 5 秒）
+                backgroundHandler.postDelayed(() -> {
+                    if (BridgeConfig.isDebug) Log.w(BridgeConfig.TAG, "No response received, releasing semaphore for message: " + m.getData());
+                    messageSemaphore.release();
+                }, BridgeConfig.messageTimeout); // 超时自动释放
+
             }
 
             if (!TextUtils.isEmpty(handlerName)) {
@@ -207,7 +213,8 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
             queueMessage(m);
         } catch (Exception e) {
-            Log.e(TAG, "Error sending message", e);
+            // 发生异常时释放许可
+            if (BridgeConfig.isDebug) Log.e(BridgeConfig.TAG, "Error sending message", e);
             messageSemaphore.release();
         }
     }
@@ -250,7 +257,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                     BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName),
                     messageJson);
 
-            if (isDebug) Log.i(TAG, bridgeName + " dispatchBatch: " + javascriptCommand);
+            if (BridgeConfig.isDebug) Log.i(BridgeConfig.TAG, bridgeName + " dispatchBatch: " + javascriptCommand);
 
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -280,7 +287,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             String bridgeName = BridgeConfig.customBridge.get(i);
             String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), messageJson);
             if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-                if (isDebug) Log.i(TAG, bridgeName + "   console   dispatchMessage：" + javascriptCommand);
+                if (BridgeConfig.isDebug) Log.i(BridgeConfig.TAG, bridgeName + "   console   dispatchMessage：" + javascriptCommand);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     this.evaluateJavascript(javascriptCommand, null);
                 } else {
@@ -310,7 +317,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     /**
-     * 多数据
+     * 多数据合并处理
      * @param jsonData
      */
     public void multiFlushMessageQueue(String jsonData) {
@@ -407,7 +414,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 //    }
 
     private void flushMessageQueue(String bridgeName) {
-        if (isDebug) Log.i(TAG, bridgeName + " flushMessageQueue");
+        if (BridgeConfig.isDebug) Log.i(BridgeConfig.TAG, bridgeName + " flushMessageQueue");
 
         String jsCommand = BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName);
 
@@ -415,7 +422,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     private void handleFlushResponse(String bridgeName, String jsonData) {
-        if (isDebug) Log.i(TAG, bridgeName + " flushResponse: " + jsonData);
+        if (BridgeConfig.isDebug) Log.i(BridgeConfig.TAG, bridgeName + " flushResponse: " + jsonData);
 
         try {
             List<Message> list = Message.toArrayList(jsonData);
@@ -428,6 +435,10 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                     if (function != null) {
                         function.onCallBack(m.getResponseData());
                         responseCallbacks.remove(m.getResponseId());
+                    } else {
+                        // 如果回调不存在，可能是超时释放了，但仍需确保信号量被释放
+                        messageSemaphore.release();
+                        if (BridgeConfig.isDebug) Log.w(BridgeConfig.TAG, "Orphan response received, releasing semaphore");
                     }
                 } else {
                     // Handle request with distinct parameter name
@@ -443,9 +454,14 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                         handler.handler(m.getData(), responseFunction);
                     }
                 }
+
+                // 对于没有回调的消息，处理完成后释放许可
+                if (m.isReleaseSemaphore()) {
+                    messageSemaphore.release();
+                }
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error processing flush response", e);
+            if (BridgeConfig.isDebug) Log.e(BridgeConfig.TAG, "Error processing flush response", e);
         }
     }
 

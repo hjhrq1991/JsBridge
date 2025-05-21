@@ -21,6 +21,8 @@ public class Message {
     private String handlerName; //name of handler
     private boolean highPriority; // new field for priority
 
+    private boolean releaseSemaphore; //
+
     private final static String CALLBACK_ID_STR = "callbackId";
     private final static String RESPONSE_ID_STR = "responseId";
     private final static String RESPONSE_DATA_STR = "responseData";
@@ -58,13 +60,17 @@ public class Message {
     public void setHandlerName(String handlerName) {
         this.handlerName = handlerName;
     }
-
     public boolean isHighPriority() {
         return highPriority;
     }
-
     public void setHighPriority(boolean highPriority) {
         this.highPriority = highPriority;
+    }
+    public boolean isReleaseSemaphore() {
+        return releaseSemaphore;
+    }
+    public void setReleaseSemaphore(boolean releaseSemaphore) {
+        this.releaseSemaphore = releaseSemaphore;
     }
 
     public String toJson() {

@@ -9,6 +9,10 @@ import java.util.List;
  */
 public class BridgeConfig {
 
+    public static final String TAG = "BridgeWebView";
+
+    public static boolean isDebug = false;
+
     public static final String toLoadJs = "WebViewJavascriptBridge.js";
     /**
      * 默认桥名
@@ -23,4 +27,14 @@ public class BridgeConfig {
      * 需要过滤，不注入js桥的域名
      */
     public static List<String> filterDomain;
+
+    /**
+     * 消息超时未处理超时时间
+     */
+    public static long messageTimeout = 5 * 1000;
+
+    /**
+     * 最大消息处理数
+     */
+    public static int MAX_IN_FLIGHT_MESSAGES = 15;
 }
