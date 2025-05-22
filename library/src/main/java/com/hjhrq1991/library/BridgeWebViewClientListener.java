@@ -5,6 +5,8 @@ import android.net.http.SslError;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
+import android.webkit.RenderProcessGoneDetail;
+import android.webkit.SafeBrowsingResponse;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -13,7 +15,7 @@ import android.webkit.WebView;
 
 /**
  * @author hjhrq1991 created at 5/10/16 15:12.
- *         超链接回调
+ * 超链接回调
  */
 public interface BridgeWebViewClientListener {
 
@@ -33,6 +35,7 @@ public interface BridgeWebViewClientListener {
 
     /**
      * 页面完成回调，可用于注入js。在注入JS桥前调用
+     *
      * @param view
      * @param url
      */
@@ -40,6 +43,7 @@ public interface BridgeWebViewClientListener {
 
     /**
      * 页面完成回调，在注入JS桥后调用
+     *
      * @param view
      * @param url
      */
@@ -78,4 +82,8 @@ public interface BridgeWebViewClientListener {
     boolean onReceivedError(WebView view, WebResourceRequest request, WebResourceError error);
 
     void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse);
+
+    boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail);
+
+    boolean onSafeBrowsingHit(WebView view, WebResourceRequest request, int threatType, SafeBrowsingResponse callback);
 }

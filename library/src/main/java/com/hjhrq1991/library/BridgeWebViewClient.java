@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
+import android.webkit.RenderProcessGoneDetail;
+import android.webkit.SafeBrowsingResponse;
 import android.webkit.SslErrorHandler;
 import android.webkit.ValueCallback;
 import android.webkit.WebResourceError;
@@ -378,6 +380,26 @@ public class BridgeWebViewClient extends WebViewClient {
     public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
         if (bridgeWebViewClientListener != null) {
             bridgeWebViewClientListener.onReceivedHttpError(view, request, errorResponse);
+        }
+    }
+
+    @Override
+    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+        if (bridgeWebViewClientListener != null) {
+            return bridgeWebViewClientListener.onRenderProcessGone(view, detail);
+        } else {
+            return super.onRenderProcessGone(view, detail);
+        }
+    }
+
+    @Override
+    public void onSafeBrowsingHit(WebView view, WebResourceRequest request, int threatType, SafeBrowsingResponse callback) {
+        boolean interrupt = false;
+        if (bridgeWebViewClientListener != null) {
+            interrupt = bridgeWebViewClientListener.onSafeBrowsingHit(view, request, threatType, callback);
+        }
+        if (!interrupt) {
+            super.onSafeBrowsingHit(view, request, threatType, callback);
         }
     }
 }
