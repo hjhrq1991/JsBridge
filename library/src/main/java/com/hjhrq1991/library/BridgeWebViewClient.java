@@ -2,12 +2,14 @@ package com.hjhrq1991.library;
 
 import android.graphics.Bitmap;
 import android.net.http.SslError;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -67,8 +69,11 @@ public class BridgeWebViewClient extends WebViewClient {
         }
 
         // =============== 新增批量消息处理 ===============
-        if (url.startsWith(BridgeUtil.YY_BATCH_DATA)) {
+        if (url.startsWith(BridgeUtil.YY_BATCH_DATA)) { // 批量传输数据
             handleBatchMessage(url.substring(BridgeUtil.YY_BATCH_DATA.length()));
+            return true;
+        } else if (url.startsWith(BridgeUtil.YY_BATCH_IDS)) { // 批量传输id去获取数据
+            webView.handleBatchMessageIds(url.substring(BridgeUtil.YY_BATCH_IDS.length()));
             return true;
         }
         // =============== 批量消息处理结束 ===============
@@ -106,8 +111,11 @@ public class BridgeWebViewClient extends WebViewClient {
         }
 
         // =============== 新增批量消息处理 ===============
-        if (url.startsWith(BridgeUtil.YY_BATCH_DATA)) {
+        if (url.startsWith(BridgeUtil.YY_BATCH_DATA)) { // 批量传输数据
             handleBatchMessage(url.substring(BridgeUtil.YY_BATCH_DATA.length()));
+            return true;
+        } else if (url.startsWith(BridgeUtil.YY_BATCH_IDS)) { // 批量传输id去获取数据
+            webView.handleBatchMessageIds(url.substring(BridgeUtil.YY_BATCH_IDS.length()));
             return true;
         }
         // =============== 批量消息处理结束 ===============

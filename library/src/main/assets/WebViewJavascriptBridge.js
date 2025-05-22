@@ -126,6 +126,9 @@
     var lastSendTime = 0;
     var isSending = false;
 
+    // 是否发送消息id，true-发送消息id，false-发送数据
+    var sendIDs = true;
+
     // 在 WebViewJavascriptBridge 初始化之前添加监控函数
     //    function monitorQueueSize() {
     //        var data = {
@@ -210,17 +213,45 @@
                 batch.push(sendMessageQueue.shift());
             }
 
-            // 发送批量消息
-            var batchData = encodeURIComponent(JSON.stringify(batch).replace(/%/g, '%25'));
-            messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch/' + batchData;
-            lastSendTime = Date.now();
+            if (sendIDs) {
+                // 发送消息ID
+                // 为每个消息生成唯一ID
+                var messageIds = batch.map(function(message) {
+                    var messageId = 'msg_' + (uniqueId++) + '_' + Date.now();
+                    // 将消息存储到临时存储中
+                    window._messageStore = window._messageStore || {};
+                    window._messageStore[messageId] = message;
+                    return messageId;
+                });
 
+                // 将消息ID列表通过URL发送给Native
+                var messageIdsStr = messageIds.join(',');
+                messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch_ids/' + messageIdsStr;
+            } else {
+                // 直接发送数据
+                // 发送批量消息
+                var batchData = encodeURIComponent(JSON.stringify(batch).replace(/%/g, '%25'));
+                messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch/' + batchData;
+            }
+
+            lastSendTime = Date.now();
             // 继续处理剩余消息
             isSending = false;
             if (sendMessageQueue.length > 0) {
                 scheduleBatchSend();
             }
         }, delay);
+    }
+
+    // 添加获取指定消息ID数据的方法
+    function _fetchMessageById(messageId) {
+        if (window._messageStore && window._messageStore[messageId]) {
+            var message = window._messageStore[messageId];
+            // 获取后删除
+            delete window._messageStore[messageId];
+            return message;
+        }
+        return null;
     }
 
     function _createQueueReadyIframe(doc) {
@@ -591,7 +622,8 @@
         registerHandler: registerHandler,
         callHandler: callHandler,
         _fetchQueue: _fetchQueue,
-        _handleMessageFromNative: _handleMessageFromNative
+        _handleMessageFromNative: _handleMessageFromNative,
+        _fetchMessageById: _fetchMessageById
     };
 
     // 添加清理函数

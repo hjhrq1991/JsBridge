@@ -11,7 +11,9 @@ import java.io.InputStreamReader;
 
 public class BridgeUtil {
     // 批量处理协议
-    public static final String YY_BATCH_DATA = "yy://batch/";
+    public static final String YY_BATCH_DATA = "yy://batch/"; // 直接获取数据，可能导致数据量过大的情况无法获取，
+    public static final String YY_BATCH_IDS = "yy://batch_ids/"; // 获取id，再通过id获取数据，可支持较大数据量
+    public static final String JS_FETCH_MESSAGE_BY_ID = "javascript:WebViewJavascriptBridge._fetchMessageById('%s');"; // 通过id获取数据方法
     public static final String YY_BATCH_RETURN = "yy://batch_return/";
 
     // 修改原有协议常量

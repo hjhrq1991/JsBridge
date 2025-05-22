@@ -280,27 +280,70 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     private void dispatchMessageBatch(String messageJson) {
         for (String bridgeName : BridgeConfig.customBridge) {
-            String javascriptCommand = String.format(
-                    BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName),
-                    messageJson);
+            String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), messageJson);
 
             if (BridgeConfig.isDebug) Log.i(BridgeConfig.TAG, bridgeName + " dispatchBatch: " + javascriptCommand);
 
             if (Looper.myLooper() == Looper.getMainLooper()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    evaluateJavascript(javascriptCommand, null);
-                } else {
-                    loadUrl(javascriptCommand);
-                }
+                evaluateJavascript(javascriptCommand, null);
             } else {
                 post(() -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        evaluateJavascript(javascriptCommand, null);
-                    } else {
-                        loadUrl(javascriptCommand);
-                    }
+                    evaluateJavascript(javascriptCommand, null);
                 });
             }
+        }
+    }
+
+
+    // 批量获取消息id
+    public void handleBatchMessageIds(String messageIdsStr) {
+        String[] messageIds = messageIdsStr.split(",");
+        for (String messageId : messageIds) {
+            getMessageById(messageId);
+        }
+    }
+
+    private void getMessageById(String messageId) {
+        for (String bridgeName : BridgeConfig.customBridge) {
+            // 为每个消息ID注入JS获取数据
+            String jsCommand = String.format(BridgeUtil.JS_FETCH_MESSAGE_BY_ID.replace(BridgeConfig.defaultBridge, bridgeName), messageId);
+
+            if (BridgeConfig.isDebug) Log.i(BridgeConfig.TAG, bridgeName + " getMessageById: " + jsCommand);
+
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                evaluateJavascript(jsCommand, data -> {
+                    if (data != null && !data.equals("null")) {
+                        // 处理获取到的消息数据
+                        if (data.startsWith("[") && data.endsWith("]")) {
+                            multiFlushMessageQueue(data);
+                        } else {
+                            multiFlushMessageQueue("[" + data + "]");
+                        }
+                    }
+                });
+            } else {
+                post(() -> {
+                    evaluateJavascript(jsCommand, data -> {
+                        if (data != null && !data.equals("null")) {
+                            // 处理获取到的消息数据
+                            if (data.startsWith("[") && data.endsWith("]")) {
+                                multiFlushMessageQueue(data);
+                            } else {
+                                multiFlushMessageQueue("[" + data + "]");
+                            }
+                        }
+                    });
+                });
+            }
+        }
+    }
+
+    public void evaluateJavascript(String script, ValueCallback<String> resultCallback) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            super.evaluateJavascript(script, resultCallback);
+        } else {
+            // 对于低版本Android，使用loadUrl方式
+            super.loadUrl(script);
         }
     }
 
@@ -315,11 +358,8 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA.replace(BridgeConfig.defaultBridge, bridgeName), messageJson);
             if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
                 if (BridgeConfig.isDebug) Log.i(BridgeConfig.TAG, bridgeName + "   console   dispatchMessage：" + javascriptCommand);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    this.evaluateJavascript(javascriptCommand, null);
-                } else {
-                    this.loadUrl(javascriptCommand);
-                }
+
+                evaluateJavascript(javascriptCommand, null);
             }
         }
     }
@@ -502,11 +542,8 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     public void loadUrl(String jsUrl, CallBackFunction returnCallback) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            this.evaluateJavascript(jsUrl, null);
-        } else {
-            this.loadUrl(jsUrl);
-        }
+        evaluateJavascript(jsUrl, null);
+
         for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
             String bridgeName = BridgeConfig.customBridge.get(i);
             responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl, bridgeName), returnCallback);
