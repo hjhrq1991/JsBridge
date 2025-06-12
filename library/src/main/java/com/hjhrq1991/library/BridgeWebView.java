@@ -63,7 +63,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     /**
      * 自动清除
      */
-    private boolean autoCleanUp = false;
+    private boolean autoCleanUp = true;
 
     public void setAutoCleanUp(boolean autoCleanUp) {
         this.autoCleanUp = autoCleanUp;
