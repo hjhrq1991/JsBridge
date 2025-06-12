@@ -171,6 +171,7 @@
 
     // ==================== 核心优化部分 ====================
     function enhancedDoSend(message, responseCallback) {
+    console.log("App JSBridge", "调用 enhancedDoSend");
         // 1. 注册回调（带超时）
         if (responseCallback) {
             var callbackId = 'cb_' + (uniqueId++) + '_' + Date.now();
@@ -199,12 +200,17 @@
     }
 
     function scheduleBatchSend() {
+        console.log("App JSBridge", "调用 scheduleBatchSend isSending：" + isSending + "  length：" + sendMessageQueue.length + "   " + (isSending || sendMessageQueue.length === 0));
         if (isSending || sendMessageQueue.length === 0) return;
+
+        console.log("App JSBridge", "开始发送流程1");
 
         var now = Date.now();
         var delay = Math.max(0, MIN_SEND_INTERVAL - (now - lastSendTime));
 
+        console.log("App JSBridge", "开始发送流程2");
         setTimeout(function() {
+            console.log("App JSBridge", "开始发送流程3");
             isSending = true;
 
             // 批量取出消息
@@ -212,6 +218,8 @@
             while (batch.length < BATCH_SIZE && sendMessageQueue.length > 0) {
                 batch.push(sendMessageQueue.shift());
             }
+
+            console.log("App JSBridge", "取出消息");
 
             if (sendIDs) {
                 // 发送消息ID
@@ -227,16 +235,20 @@
                 // 将消息ID列表通过URL发送给Native
                 var messageIdsStr = messageIds.join(',');
                 messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch_ids/' + messageIdsStr;
+                        console.log("App JSBridge", "发送多个ids" + messageIdsStr);
             } else {
                 // 直接发送数据
                 // 发送批量消息
                 var batchData = encodeURIComponent(JSON.stringify(batch).replace(/%/g, '%25'));
                 messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch/' + batchData;
+
+                                        console.log("App JSBridge", "直接发送消息");
             }
 
             lastSendTime = Date.now();
             // 继续处理剩余消息
             isSending = false;
+            console.log("App JSBridge", "发送消息完成");
             if (sendMessageQueue.length > 0) {
                 scheduleBatchSend();
             }
@@ -320,6 +332,7 @@
 
     // 同步执行
     function synchronizationCallHandler(handlerName, data, responseCallback) {
+    console.log("App JSBridge", "同步发送 callHandler");
         // ✅ _data 现在是最终要发送的数据
         _doSend({
             handlerName: handlerName,
@@ -356,6 +369,7 @@
 
     // ==================== 原有函数改造 ====================
     function _doSend(message, responseCallback) {
+    console.log("App JSBridge", "调用_doSend");
         enhancedDoSend(message, responseCallback);
     }
 
@@ -628,6 +642,8 @@
 
     // 添加清理函数
     function cleanup() {
+        // 只在当前 WebView 卸载时清理
+        if (window.self !== window.top) return;
         try {
             // 清理 Worker
             if (compressionWorker) {

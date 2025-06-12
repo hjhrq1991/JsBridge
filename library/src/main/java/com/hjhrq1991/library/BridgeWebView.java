@@ -60,6 +60,15 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     private final AtomicLong uniqueId = new AtomicLong(0);
     private final Gson gson = new Gson();
 
+    /**
+     * 自动清除
+     */
+    private boolean autoCleanUp = false;
+
+    public void setAutoCleanUp(boolean autoCleanUp) {
+        this.autoCleanUp = autoCleanUp;
+    }
+
     private final Runnable batchDispatcher = new Runnable() {
         @Override
         public void run() {
@@ -532,7 +541,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         }
     }
 
-    private CallBackFunction createResponseCallback(final String callbackId) {
+    private CallBackFunction createResponseCallback(String callbackId) {
         return responseData -> {
             Message responseMsg = new Message();
             responseMsg.setResponseId(callbackId);
@@ -825,7 +834,9 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        cleanup();
+        if (autoCleanUp) {
+            cleanup();
+        }
     }
 
     public void cleanup() {

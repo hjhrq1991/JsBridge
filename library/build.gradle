@@ -4,7 +4,7 @@ plugins {
 }
 
 def group = 'com.github.hjhrq1991'
-def libraryVersion = '1.1.7'
+def libraryVersion = '1.1.8'
 
 // Because the components are created only during the afterEvaluate phase, you must
 // configure your publications using the afterEvaluate() lifecycle method.
@@ -36,12 +36,12 @@ afterEvaluate {
 
 android {
 
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
 
     defaultConfig {
         minSdkVersion 9
-        targetSdkVersion 28
+        targetSdkVersion 30
         versionCode 1
         versionName version
     }
