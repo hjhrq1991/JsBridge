@@ -91,7 +91,7 @@ public class BridgeUtil {
 
             // 设置是否显示全部日志
             if (BridgeConfig.showAllJSLog) {
-                jsContent = jsContent.replaceAll("var showAllLog = false;", "var showAllLog = false;");
+                jsContent = jsContent.replaceAll("var showAllLog = false;", "var showAllLog = true;");
             }
         }
         view.loadUrl("javascript:" + jsContent);
