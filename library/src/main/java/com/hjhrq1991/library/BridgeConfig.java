@@ -13,6 +13,8 @@ public class BridgeConfig {
 
     public static boolean isDebug = false;
 
+    public static boolean showAllJSLog = false;
+
     public static final String toLoadJs = "WebViewJavascriptBridge.js";
     /**
      * 默认桥名

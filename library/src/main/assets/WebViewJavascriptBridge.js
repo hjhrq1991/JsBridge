@@ -129,6 +129,9 @@
     // 是否发送消息id，true-发送消息id，false-发送数据
     var sendIDs = true;
 
+    // 是否显示所有日志
+    var showAllLog = false;
+
     // 在 WebViewJavascriptBridge 初始化之前添加监控函数
     //    function monitorQueueSize() {
     //        var data = {
@@ -171,7 +174,7 @@
 
     // ==================== 核心优化部分 ====================
     function enhancedDoSend(message, responseCallback) {
-    console.log("App JSBridge", "调用 enhancedDoSend");
+        if (showAllLog) console.log("App JSBridge", "调用 enhancedDoSend");
         // 1. 注册回调（带超时）
         if (responseCallback) {
             var callbackId = 'cb_' + (uniqueId++) + '_' + Date.now();
@@ -203,14 +206,14 @@
         console.log("App JSBridge", "调用 scheduleBatchSend isSending：" + isSending + "  length：" + sendMessageQueue.length + "   " + (isSending || sendMessageQueue.length === 0));
         if (isSending || sendMessageQueue.length === 0) return;
 
-        console.log("App JSBridge", "开始发送流程1");
+        if (showAllLog) console.log("App JSBridge", "开始发送流程1");
 
         var now = Date.now();
         var delay = Math.max(0, MIN_SEND_INTERVAL - (now - lastSendTime));
 
-        console.log("App JSBridge", "开始发送流程2");
+        if (showAllLog) console.log("App JSBridge", "开始发送流程2");
         setTimeout(function() {
-            console.log("App JSBridge", "开始发送流程3");
+            if (showAllLog) console.log("App JSBridge", "开始发送流程3");
             isSending = true;
 
             // 批量取出消息
@@ -219,7 +222,7 @@
                 batch.push(sendMessageQueue.shift());
             }
 
-            console.log("App JSBridge", "取出消息");
+            if (showAllLog) console.log("App JSBridge", "取出消息");
 
             if (sendIDs) {
                 // 发送消息ID
@@ -235,20 +238,20 @@
                 // 将消息ID列表通过URL发送给Native
                 var messageIdsStr = messageIds.join(',');
                 messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch_ids/' + messageIdsStr;
-                        console.log("App JSBridge", "发送多个ids" + messageIdsStr);
+                if (showAllLog) console.log("App JSBridge", "发送多个ids" + messageIdsStr);
             } else {
                 // 直接发送数据
                 // 发送批量消息
                 var batchData = encodeURIComponent(JSON.stringify(batch).replace(/%/g, '%25'));
                 messagingIframe.src = CUSTOM_PROTOCOL_SCHEME + '://batch/' + batchData;
 
-                                        console.log("App JSBridge", "直接发送消息");
+                if (showAllLog) console.log("App JSBridge", "直接发送消息");
             }
 
             lastSendTime = Date.now();
             // 继续处理剩余消息
             isSending = false;
-            console.log("App JSBridge", "发送消息完成");
+            if (showAllLog) console.log("App JSBridge", "发送消息完成");
             if (sendMessageQueue.length > 0) {
                 scheduleBatchSend();
             }
@@ -274,7 +277,7 @@
 
     //set default messageHandler
     function init(messageHandler) {
-        console.error("App JSBridge", "JS桥连接初始化成功");
+        if (showAllLog) console.error("App JSBridge", "JS桥连接初始化成功");
         isBridgeInit = true;
         if (WebViewJavascriptBridge._messageHandler) {
             throw new Error('WebViewJavascriptBridge.init called twice');
@@ -296,7 +299,7 @@
     //注册
     function registerHandler(handlerName, handler) {
         messageHandlers[handlerName] = handler;
-        console.log("App JSBridge", "web 注册了handler：" + handlerName);
+        if (showAllLog) console.log("App JSBridge", "web 注册了handler：" + handlerName);
     }
 
     //反注册
@@ -311,10 +314,10 @@
             // 如果 data 是字符串，解析它；否则直接使用
             const request = typeof data === 'string' ? JSON.parse(data) : data;
             const nativeConfig = JSON.stringify(request.nativeConfig);
-            console.log("App JSBridge", "callHandler：" + handlerName + "  callName：" + nativeConfig);
+            if (showAllLog) console.log("App JSBridge", "callHandler：" + handlerName + "  callName：" + nativeConfig);
         } catch (error) {
-            console.error("App JSBridge", "压缩数据时发生错误：", error);
-            console.error("App JSBridge", "callHandler：" + handlerName);
+            if (showAllLog) console.error("App JSBridge", "压缩数据时发生错误：", error);
+            if (showAllLog) console.error("App JSBridge", "callHandler：" + handlerName);
         }
 
         var length = dataStr.length;
@@ -322,17 +325,17 @@
         var _data = dataStr;
 
         if (length > maxLength) {
-            console.log("App JSBridge", "数据长度大于等于 " + maxLength / 10000 + " 万，调用asyncCallHandler");
+            if (showAllLog) console.log("App JSBridge", "数据长度大于等于 " + maxLength / 10000 + " 万，调用asyncCallHandler");
             asyncCallHandler(handlerName, data, responseCallback);
         } else {
-            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩，直接执行");
+            if (showAllLog) console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩，直接执行");
             synchronizationCallHandler(handlerName, data, responseCallback);
         }
     }
 
     // 同步执行
     function synchronizationCallHandler(handlerName, data, responseCallback) {
-    console.log("App JSBridge", "同步发送 callHandler");
+        if (showAllLog) console.log("App JSBridge", "同步发送 callHandler");
         // ✅ _data 现在是最终要发送的数据
         _doSend({
             handlerName: handlerName,
@@ -351,13 +354,13 @@
             try {
                 // ✅ 处理异常
                 var compress = await asyncCompress(dataStr);
-                console.log("App JSBridge", "原始数据长度：" + JSON.stringify(data).length + " 压缩后数据长度：" + compress.length);
+                if (showAllLog) .log("App JSBridge", "原始数据长度：" + JSON.stringify(data).length + " 压缩后数据长度：" + compress.length);
                 _data = "lzstring:" + compress
             } catch (error) {
-                console.error("App JSBridge", "压缩数据时发生错误：", error);
+                if (showAllLog) console.error("App JSBridge", "压缩数据时发生错误：", error);
             }
         } else {
-            console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩");
+            if (showAllLog) console.log("App JSBridge", "数据长度小于 " + maxLength / 10000 + " 万，无需压缩");
         }
 
         // ✅ _data 现在是最终要发送的数据
@@ -369,7 +372,7 @@
 
     // ==================== 原有函数改造 ====================
     function _doSend(message, responseCallback) {
-    console.log("App JSBridge", "调用_doSend");
+        if (showAllLog) console.log("App JSBridge", "调用_doSend");
         enhancedDoSend(message, responseCallback);
     }
 
@@ -598,11 +601,11 @@
                         //存在压缩处理，进行解压缩操作
                         var decompress = _data.substring("lzstring:".length);
                         _data = await asyncDecompress(decompress);
-                        console.log("App JSBridge", "send：" + " 数据量过大，需做解压处理 解压前长度：" + decompress.length + "  解压后长度：" + _data.length);
+                        if (showAllLog) console.log("App JSBridge", "receive：" + " 数据量过大，需做解压处理 解压前长度：" + decompress.length + "  解压后长度：" + _data.length);
                     } else {
 
                     }
-
+                    if (showAllLog) console.log("App JSBridge", "receive：" + _data);
                     // ✅ _data 现在是最终要发送的数据
                     handler(_data, responseCallback);
                 } catch (exception) {
@@ -688,7 +691,7 @@
             uniqueId = 1;
             operationId = 0;
 
-            console.log('App JSBridge cleanup completed');
+            if (showAllLog) console.log('App JSBridge cleanup completed');
         } catch (error) {
             console.error('App JSBridge cleanup error:', error);
         }
