@@ -354,7 +354,7 @@
             try {
                 // ✅ 处理异常
                 var compress = await asyncCompress(dataStr);
-                if (showAllLog) .log("App JSBridge", "原始数据长度：" + JSON.stringify(data).length + " 压缩后数据长度：" + compress.length);
+                if (showAllLog) console.log("App JSBridge", "原始数据长度：" + JSON.stringify(data).length + " 压缩后数据长度：" + compress.length);
                 _data = "lzstring:" + compress
             } catch (error) {
                 if (showAllLog) console.error("App JSBridge", "压缩数据时发生错误：", error);

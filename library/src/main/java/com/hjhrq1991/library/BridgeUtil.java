@@ -88,9 +88,12 @@ public class BridgeUtil {
         String jsContent = assetFile2Str(view.getContext(), path);
         if (!TextUtils.isEmpty(jsContent)) {
             jsContent = jsContent.replaceAll(defaultJs, customJs);
+
+            // 设置是否显示全部日志
+            if (BridgeConfig.showAllJSLog) {
+                jsContent = jsContent.replaceAll("var showAllLog = false;", "var showAllLog = false;");
+            }
         }
-        // 设置是否显示全部日志
-        jsContent = jsContent.replaceAll("var showAllLog = false;", "var showAllLog = " + BridgeConfig.showAllJSLog + ";");
         view.loadUrl("javascript:" + jsContent);
     }
 
