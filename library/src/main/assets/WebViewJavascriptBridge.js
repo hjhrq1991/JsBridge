@@ -118,6 +118,8 @@
     // 桥是否初始化
     var isBridgeInit = false;
 
+    var lastResponseId = '';
+
     // ==================== 流量控制核心 ====================
     // 每次批量发送5条消息
     var BATCH_SIZE = 5;
@@ -372,7 +374,20 @@
 
     // ==================== 原有函数改造 ====================
     function _doSend(message, responseCallback) {
-        if (showAllLog) console.log("App JSBridge", "调用_doSend");
+        // 检查 message 是否存在且有 responseId
+        if (message && message.hasOwnProperty('responseId')) {
+            // 如果 responseId 与上一次相同，则跳过重复请求
+            if (message.responseId === lastResponseId) {
+                if (showAllLog) console.log("App JSBridge", "跳过重复请求 responseId: " + message.responseId);
+                    return;
+            }
+            lastResponseId = message.responseId;
+       } else {
+            // 如果没有 responseId，重置 lastResponseId 或保持原逻辑
+            lastResponseId = null;
+       }
+
+        if (showAllLog) console.log("App JSBridge", "调用_doSend  " + JSON.stringify(message));
         enhancedDoSend(message, responseCallback);
     }
 
