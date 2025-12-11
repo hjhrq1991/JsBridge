@@ -2,14 +2,6 @@
 jdk:
   - openjdk11
 
-before_install:
-  - echo "开始构建"
-
+# 告诉 JitPack 只需要构建这个子模块
 install:
-  - ./gradlew :library:assemble
-  - ./gradlew :library:publishToMavenLocal
-
-jitpack:
-  # 指定哪个模块是主模块
-  artifact: "library"
-
+  - FILE="-Dfile.encoding=UTF-8" ./gradlew :library:publishToMavenLocal $FILE
