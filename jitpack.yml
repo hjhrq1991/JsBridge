@@ -1,0 +1,15 @@
+# jitpack.yml
+jdk:
+  - openjdk11
+
+before_install:
+  - echo "开始构建"
+
+install:
+  - ./gradlew :library:assemble
+  - ./gradlew :library:publishToMavenLocal
+
+jitpack:
+  # 指定哪个模块是主模块
+  artifact: "library"
+

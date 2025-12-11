@@ -4,6 +4,7 @@ plugins {
 }
 
 def group = 'com.github.hjhrq1991'
+def artifact = 'JsBridge'
 def libraryVersion = '1.2.0'
 
 // Because the components are created only during the afterEvaluate phase, you must
@@ -18,7 +19,7 @@ afterEvaluate {
 
                 // You can then customize attributes of the publication as shown below.
                 groupId = group
-                artifactId = 'JsBridge'
+                artifactId = artifact
                 version = libraryVersion
             }
 //            // Creates a Maven publication called “debug”.
