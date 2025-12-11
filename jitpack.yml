@@ -1,7 +1,17 @@
-# jitpack.yml
 jdk:
   - openjdk11
 
-# 告诉 JitPack 只需要构建这个子模块
+before_install:
+  - export GRADLE_OPTS="-Xmx512m -XX:MaxMetaspaceSize=512m"
+  - chmod +x gradlew
+
 install:
-  - FILE="-Dfile.encoding=UTF-8" ./gradlew :library:publishToMavenLocal $FILE
+  - ./gradlew clean
+  - ./gradlew :library:assembleRelease
+  - ./gradlew :library:publishToMavenLocal
+
+# 明确指定要发布的模块
+jitpack:
+  artifact: "library:release"  # 模块名:变体名
+  # 或者使用完整路径
+  artifact: "com.github.hjhrq1991:JsBridge"
