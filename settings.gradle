@@ -1,1 +1,1 @@
-include ':example', ':library', ':x5demo', ':library-tbsx5'
+include ':example', ':library'
