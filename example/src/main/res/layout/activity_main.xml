@@ -4,6 +4,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <Button
+        android:id="@+id/btn_init"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Init JSBridge"
+        android:visibility="visible" />
+
     <!-- button 演示Java调用web -->
     <RelativeLayout
         android:layout_width="match_parent"
@@ -47,5 +54,6 @@
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
 
 </LinearLayout>

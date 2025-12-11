@@ -64,6 +64,10 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
      * 自动清除
      */
     private boolean autoCleanUp = true;
+    /**
+     * 是否预加载模式，预加载时不会初始化JS桥
+     */
+    private boolean isPreloadMode = false;
 
     public void setAutoCleanUp(boolean autoCleanUp) {
         this.autoCleanUp = autoCleanUp;
@@ -130,6 +134,38 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     protected BridgeWebViewClient generateBridgeWebViewClient() {
         return bridgeWebViewClient = new BridgeWebViewClient(this);
+    }
+
+    /**
+     * 注册JS桥，可用于预加载等需要重新初始化JS桥的情况
+     */
+    public void initJSBridge() {
+        for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
+            String bridgeName = BridgeConfig.customBridge.get(i);
+            BridgeUtil.webViewLoadLocalJs(this, BridgeConfig.toLoadJs, BridgeConfig.defaultBridge, bridgeName);
+        }
+
+        if (this.getStartupMessage() != null) {
+            for (Message m : this.getStartupMessage()) {
+                this.dispatchMessage(m);
+            }
+            this.setStartupMessage(null);
+        }
+    }
+
+    /**
+     * 获取是否初始化JS桥，可用于预加载等需要重新初始化JS桥的情况
+     */
+    public boolean hasInitJSBridge() {
+        return bridgeWebViewClient.hasInitJSBridge();
+    }
+
+    public boolean isPreloadMode() {
+        return isPreloadMode;
+    }
+
+    public void setPreloadMode(boolean preloadMode) {
+        isPreloadMode = preloadMode;
     }
 
     // url：yy://return/_fetchQueue/[{"handlerName":"jsClick1","data":"{\"title\":\"hello title\"}"}]

@@ -39,6 +39,7 @@ public class MainActivity extends Activity implements OnClickListener {
     Button btn1;
     Button btn2;
     Button btn3;
+    Button btnInit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +53,9 @@ public class MainActivity extends Activity implements OnClickListener {
     }
 
     private void initView() {
-        webView = (BridgeWebView) findViewById(R.id.webView);
+        webView = findViewById(R.id.webView);
+        // 设置为预加载模式
+        webView.setPreloadMode(true);
 
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setSaveFormData(false);
@@ -68,17 +71,20 @@ public class MainActivity extends Activity implements OnClickListener {
         webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
 //        mWwebViewebView.getSettings().setUserAgentString(Constant.useragent);
 
-        backBtn = (Button) findViewById(R.id.back);
+        backBtn = findViewById(R.id.back);
         backBtn.setOnClickListener(this);
 
-        btn1 = (Button) findViewById(R.id.btn1);
+        btn1 = findViewById(R.id.btn1);
         btn1.setOnClickListener(this);
 
-        btn2 = (Button) findViewById(R.id.btn2);
+        btn2 = findViewById(R.id.btn2);
         btn2.setOnClickListener(this);
 
-        btn3 = (Button) findViewById(R.id.btn3);
+        btn3 = findViewById(R.id.btn3);
         btn3.setOnClickListener(this);
+
+        btnInit = findViewById(R.id.btn_init);
+        btnInit.setOnClickListener(this);
 
         //=======================js桥使用改方法替换原有setWebViewClient()方法==========================
         webView.setBridgeWebViewClientListener(new SimpleBridgeWebViewClientListener() {
@@ -271,6 +277,10 @@ public class MainActivity extends Activity implements OnClickListener {
                         Toast.makeText(MainActivity.this, data, Toast.LENGTH_SHORT).show();
                     }
                 });
+                break;
+            case R.id.btn_init:
+                webView.setPreloadMode(false);
+                webView.initJSBridge();
                 break;
         }
     }

@@ -38,10 +38,19 @@ public class BridgeWebViewClient extends WebViewClient {
      */
     private int onPageStartedCount = 0;
 
+    /**
+     * 是否注册JS桥
+     */
+    private boolean hasInitJSBridge = false;
+
     private BridgeWebViewClientListener bridgeWebViewClientListener;
 
     public BridgeWebViewClient(BridgeWebView webView) {
         this.webView = webView;
+    }
+
+    public boolean hasInitJSBridge() {
+        return hasInitJSBridge;
     }
 
     public void setBridgeWebViewClientListener(BridgeWebViewClientListener bridgeWebViewClientListener) {
@@ -202,12 +211,12 @@ public class BridgeWebViewClient extends WebViewClient {
                 }
             }
         }
-        if (canLoadJS){
+        if (canLoadJS && !webView.isPreloadMode()) {
             //modify：hjhrq1991，web为渲染即跳转导致系统未调用onPageStarted就调用onPageFinished方法引起的js桥初始化失败
             if (BridgeConfig.toLoadJs != null && !url.contains("about:blank") && !isRedirected) {
                 for (int i = 0; i < BridgeConfig.customBridge.size(); i++) {
                     String bridgeName = BridgeConfig.customBridge.get(i);
-                    BridgeUtil.webViewLoadLocalJs(view, BridgeConfig.toLoadJs, BridgeConfig.defaultBridge, bridgeName);
+                    BridgeUtil.webViewLoadLocalJs(webView, BridgeConfig.toLoadJs, BridgeConfig.defaultBridge, bridgeName);
                 }
             }
 
