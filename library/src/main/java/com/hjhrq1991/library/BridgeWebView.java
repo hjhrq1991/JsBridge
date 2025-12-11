@@ -144,7 +144,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             String bridgeName = BridgeConfig.customBridge.get(i);
             BridgeUtil.webViewLoadLocalJs(this, BridgeConfig.toLoadJs, BridgeConfig.defaultBridge, bridgeName);
         }
-
+        bridgeWebViewClient.setInitJSBridge(true);
         if (this.getStartupMessage() != null) {
             for (Message m : this.getStartupMessage()) {
                 this.dispatchMessage(m);

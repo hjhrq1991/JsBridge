@@ -53,6 +53,10 @@ public class BridgeWebViewClient extends WebViewClient {
         return hasInitJSBridge;
     }
 
+    public void setInitJSBridge(boolean hasInitJSBridge) {
+        this.hasInitJSBridge = hasInitJSBridge;
+    }
+
     public void setBridgeWebViewClientListener(BridgeWebViewClientListener bridgeWebViewClientListener) {
         this.bridgeWebViewClientListener = bridgeWebViewClientListener;
     }
@@ -218,13 +222,15 @@ public class BridgeWebViewClient extends WebViewClient {
                     String bridgeName = BridgeConfig.customBridge.get(i);
                     BridgeUtil.webViewLoadLocalJs(webView, BridgeConfig.toLoadJs, BridgeConfig.defaultBridge, bridgeName);
                 }
-            }
 
-            if (webView.getStartupMessage() != null) {
-                for (Message m : webView.getStartupMessage()) {
-                    webView.dispatchMessage(m);
+                hasInitJSBridge = true;
+
+                if (webView.getStartupMessage() != null) {
+                    for (Message m : webView.getStartupMessage()) {
+                        webView.dispatchMessage(m);
+                    }
+                    webView.setStartupMessage(null);
                 }
-                webView.setStartupMessage(null);
             }
         }
 
