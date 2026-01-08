@@ -7,7 +7,7 @@ plugins {
 def group = 'com.github.hjhrq1991'
 //def artifact = 'JsBridge'
 def artifact = 'JsBridge-ktx'
-def libraryVersion = '1.2.0'
+def libraryVersion = '1.2.1'
 
 // Because the components are created only during the afterEvaluate phase, you must
 // configure your publications using the afterEvaluate() lifecycle method.
