@@ -9,6 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:text="Init JSBridge"
+        android:textAllCaps="false"
         android:visibility="visible" />
 
     <!-- button 演示Java调用web -->
@@ -21,6 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="48dp"
             android:text="关闭"
+            android:textAllCaps="false"
             android:visibility="visible" />
 
         <Button
@@ -29,6 +31,7 @@
             android:layout_height="48dp"
             android:layout_alignParentRight="true"
             android:text="app调用js桥1"
+            android:textAllCaps="false"
             android:visibility="gone" />
 
         <Button
@@ -37,6 +40,7 @@
             android:layout_height="48dp"
             android:layout_toLeftOf="@+id/btn1"
             android:text="app调用js桥2"
+            android:textAllCaps="false"
             android:visibility="gone" />
 
     </RelativeLayout>
@@ -46,6 +50,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:text="调用js桥3"
+        android:textAllCaps="false"
         android:visibility="visible" />
 
 

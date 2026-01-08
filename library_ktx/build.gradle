@@ -1,0 +1,78 @@
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+    id 'org.jetbrains.kotlin.android'
+}
+
+def group = 'com.github.hjhrq1991'
+//def artifact = 'JsBridge'
+def artifact = 'JsBridge-ktx'
+def libraryVersion = '1.2.0'
+
+// Because the components are created only during the afterEvaluate phase, you must
+// configure your publications using the afterEvaluate() lifecycle method.
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                // Applies the component for the release build variant.
+                from components.release
+
+                // You can then customize attributes of the publication as shown below.
+                groupId = group
+                artifactId = artifact
+                version = libraryVersion
+            }
+//            // Creates a Maven publication called “debug”.
+//            debug(MavenPublication) {
+//                // Applies the component for the debug build variant.
+//                from components.debug
+//
+//                groupId = group
+//                artifactId = 'JsBridge-debug'
+//                version = libraryVersion
+//            }
+        }
+    }
+}
+
+android {
+
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 30
+        versionCode 1
+        versionName version
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
+
+dependencies {
+    api 'com.google.code.gson:gson:2.11.0'
+}
+
+//apply plugin: 'com.novoda.bintray-release'
+//publish {
+//    def Properties localProps = new Properties()
+//    localProps.load(new FileInputStream(file('../gradle.properties')))
+//
+//    userOrg = localProps.USERORG
+//    groupId = localProps.GROUPID
+//    artifactId = localProps.ARTIFACTID
+//    publishVersion = localProps.PUBLISHVERSION
+//    desc = localProps.DESC
+//    website = localProps.WEBSITE
+//}
