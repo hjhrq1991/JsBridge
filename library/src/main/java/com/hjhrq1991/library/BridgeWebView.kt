@@ -4,24 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.Looper
-import android.os.SystemClock
+import android.os.*
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
-import android.webkit.ConsoleMessage
-import android.webkit.GeolocationPermissions
-import android.webkit.JsPromptResult
-import android.webkit.JsResult
-import android.webkit.PermissionRequest
-import android.webkit.ValueCallback
-import android.webkit.WebChromeClient
-import android.webkit.WebStorage
-import android.webkit.WebView
+import android.webkit.*
 import com.google.gson.Gson
 import java.util.*
 import java.util.concurrent.PriorityBlockingQueue
@@ -33,7 +21,11 @@ import java.util.concurrent.atomic.AtomicLong
 class BridgeWebView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyle: Int = 0
+    defStyle: Int = 0,
+    /**
+     * 是否预加载模式，预加载时不会初始化JS桥以及设置webViewClient，需要手动调用[setWebViewClient]、[initJSBridge] 初始化
+     */
+    var isPreloadMode: Boolean = false
 ) : WebView(context, attrs, defStyle), WebViewJavascriptBridge {
 
     companion object {
@@ -65,10 +57,6 @@ class BridgeWebView @JvmOverloads constructor(
      * 自动清除
      */
     var autoCleanUp = true
-    /**
-     * 是否预加载模式，预加载时不会初始化JS桥
-     */
-    var isPreloadMode = false
 
     private val batchDispatcher = Runnable {
         dispatchBatch()
@@ -76,6 +64,17 @@ class BridgeWebView @JvmOverloads constructor(
     }
 
     init {
+        // 从 XML 属性中读取 isPreloadMode，XML 属性的优先级最高
+        attrs?.let {
+            val typedArray = context.obtainStyledAttributes(it, R.styleable.BridgeWebView)
+            try {
+                if (typedArray.hasValue(R.styleable.BridgeWebView_isPreloadMode)) {
+                    isPreloadMode = typedArray.getBoolean(R.styleable.BridgeWebView_isPreloadMode, false)
+                }
+            } finally {
+                typedArray.recycle()
+            }
+        }
         init()
     }
 
@@ -100,11 +99,17 @@ class BridgeWebView @JvmOverloads constructor(
         handlerThread?.start()
         backgroundHandler = Handler(handlerThread?.looper ?: Looper.getMainLooper())
 
-        this.webViewClient = generateBridgeWebViewClient()
+        if (!isPreloadMode) {
+            this.webViewClient = generateBridgeWebViewClient()
+        }
     }
 
-    fun setWebViewClient() {
+    /**
+     * 设置回调方法，[isPreloadMode] 为true 时需要手动调用
+     */
+    fun setWebViewClient(bridgeWebViewClientListener: BridgeWebViewClientListener? = null) {
         this.webViewClient = generateBridgeWebViewClient()
+        bridgeWebViewClient?.setBridgeWebViewClientListener(bridgeWebViewClientListener)
     }
 
     protected fun generateBridgeWebViewClient(): BridgeWebViewClient {
@@ -484,6 +489,9 @@ class BridgeWebView @JvmOverloads constructor(
         doSend(handlerName, data, callBack, false)
     }
 
+    /**
+     * 设置回调方法
+     */
     fun setBridgeWebViewClientListener(bridgeWebViewClientListener: BridgeWebViewClientListener?) {
         bridgeWebViewClient?.setBridgeWebViewClientListener(bridgeWebViewClientListener)
     }

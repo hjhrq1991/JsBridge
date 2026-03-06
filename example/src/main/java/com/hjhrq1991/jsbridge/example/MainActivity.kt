@@ -71,53 +71,6 @@ class MainActivity : Activity(), View.OnClickListener {
         binding.btn3.setOnClickListener(this)
         binding.btnInit.setOnClickListener(this)
 
-        //=======================js桥使用改方法替换原有setWebViewClient()方法==========================
-        webView.setBridgeWebViewClientListener(object : SimpleBridgeWebViewClientListener() {
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                return false
-            }
-
-            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                return false
-            }
-
-            override fun onPageStarted(view: WebView?, url: String?, bitmap: Bitmap?) {
-                binding.btn1.visibility = View.GONE
-                binding.btn2.visibility = View.GONE
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-            }
-
-            override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
-            }
-
-            override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?): Boolean {
-                val message = when (error?.primaryError) {
-                    SslError.SSL_UNTRUSTED -> "证书颁发机构不受信任"
-                    SslError.SSL_EXPIRED -> "证书过期"
-                    SslError.SSL_IDMISMATCH -> "网站名称与证书不一致"
-                    SslError.SSL_NOTYETVALID -> "证书无效"
-                    SslError.SSL_DATE_INVALID -> "证书日期无效"
-                    SslError.SSL_INVALID -> "证书错误"
-                    else -> "证书错误"
-                }
-                val builder = AlertDialog.Builder(this@MainActivity)
-                builder.setTitle("提示")
-                    .setMessage("$message，是否继续")
-                    .setCancelable(true)
-                    .setPositiveButton("确认") { _: DialogInterface, _: Int ->
-                        handler?.proceed()
-                    }
-                    .setNegativeButton("取消") { _: DialogInterface, _: Int ->
-                        handler?.cancel()
-                    }
-                val alert = builder.create()
-                alert.show()
-
-                return true
-            }
-        })
         //=======================此方法必须调用==========================
         webView.setDefaultHandler(DefaultHandler())
         webView.webChromeClient = object : WebChromeClient() {
@@ -221,6 +174,53 @@ class MainActivity : Activity(), View.OnClickListener {
             }
             R.id.btn_init -> {
                 webView.isPreloadMode = false
+                //=======================js桥使用改方法替换原有setWebViewClient()方法==========================
+                webView.setWebViewClient(object : SimpleBridgeWebViewClientListener() {
+                    override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                        return false
+                    }
+
+                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                        return false
+                    }
+
+                    override fun onPageStarted(view: WebView?, url: String?, bitmap: Bitmap?) {
+                        binding.btn1.visibility = View.GONE
+                        binding.btn2.visibility = View.GONE
+                    }
+
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                    }
+
+                    override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                    }
+
+                    override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?): Boolean {
+                        val message = when (error?.primaryError) {
+                            SslError.SSL_UNTRUSTED -> "证书颁发机构不受信任"
+                            SslError.SSL_EXPIRED -> "证书过期"
+                            SslError.SSL_IDMISMATCH -> "网站名称与证书不一致"
+                            SslError.SSL_NOTYETVALID -> "证书无效"
+                            SslError.SSL_DATE_INVALID -> "证书日期无效"
+                            SslError.SSL_INVALID -> "证书错误"
+                            else -> "证书错误"
+                        }
+                        val builder = AlertDialog.Builder(this@MainActivity)
+                        builder.setTitle("提示")
+                            .setMessage("$message，是否继续")
+                            .setCancelable(true)
+                            .setPositiveButton("确认") { _: DialogInterface, _: Int ->
+                                handler?.proceed()
+                            }
+                            .setNegativeButton("取消") { _: DialogInterface, _: Int ->
+                                handler?.cancel()
+                            }
+                        val alert = builder.create()
+                        alert.show()
+
+                        return true
+                    }
+                })
                 webView.initJSBridge()
             }
         }
