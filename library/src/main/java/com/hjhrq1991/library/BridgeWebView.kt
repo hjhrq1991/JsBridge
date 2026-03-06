@@ -456,7 +456,8 @@ open class BridgeWebView @JvmOverloads constructor(
         }
     }
 
-    fun loadUrl(jsUrl: String, returnCallback: CallBackFunction?) {
+    fun loadUrl(jsUrl: String?, returnCallback: CallBackFunction?) {
+        if (jsUrl.isNullOrEmpty()) return
         evaluateJavascript(jsUrl, null)
 
         for (bridgeName in BridgeConfig.customBridge) {
