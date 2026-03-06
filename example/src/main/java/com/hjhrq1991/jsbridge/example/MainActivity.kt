@@ -15,11 +15,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.Toast
 import com.hjhrq1991.jsbridge.example.databinding.ActivityMainBinding
-import com.hjhrq1991.library.BridgeHandler
-import com.hjhrq1991.library.BridgeWebView
-import com.hjhrq1991.library.CallBackFunction
-import com.hjhrq1991.library.DefaultHandler
-import com.hjhrq1991.library.SimpleBridgeWebViewClientListener
+import com.hjhrq1991.library.*
 
 /**
  * @author hjhrq1991 created at 4/28/16 14:33.
