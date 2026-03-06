@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 @SuppressLint("SetJavaScriptEnabled")
-class BridgeWebView @JvmOverloads constructor(
+open class BridgeWebView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
