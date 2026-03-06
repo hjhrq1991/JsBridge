@@ -34,7 +34,6 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':library')
-//    implementation project(':library_ktx')
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.6.21"
 }
