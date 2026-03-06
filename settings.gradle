@@ -1,1 +1,1 @@
-include ':example', ':library', ':library_ktx'
+include ':example', ':library'
